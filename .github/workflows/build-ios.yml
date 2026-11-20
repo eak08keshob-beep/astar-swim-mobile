@@ -24,28 +24,30 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
-          cache-dependency-path: '**/package-lock.json'
 
       - name: 3. Select latest Xcode
         run: sudo xcode-select -switch /Applications/Xcode_15.4.app || sudo xcode-select -switch /Applications/Xcode.app
 
       - name: 4. Install Node dependencies
-        working-directory: mobile-app-package
-        run: npm install
+        run: |
+          if [ -d "mobile-app-package" ]; then cd mobile-app-package; fi
+          npm install
 
       - name: 5. Sync Capacitor iOS
-        working-directory: mobile-app-package
-        run: npx cap sync ios
+        run: |
+          if [ -d "mobile-app-package" ]; then cd mobile-app-package; fi
+          npx cap sync ios
 
       - name: 6. Install CocoaPods
-        working-directory: mobile-app-package/ios/App
         run: |
+          if [ -d "mobile-app-package" ]; then cd mobile-app-package; fi
+          cd ios/App
           pod install --repo-update
 
       - name: 7. Build Xcode Archive
-        working-directory: mobile-app-package/ios/App
         run: |
+          if [ -d "mobile-app-package" ]; then cd mobile-app-package; fi
+          cd ios/App
           mkdir -p build
           xcodebuild archive \
             -workspace App.xcworkspace \
@@ -57,8 +59,9 @@ jobs:
             CODE_SIGNING_REQUIRED=NO
 
       - name: 8. Package into .IPA File
-        working-directory: mobile-app-package/ios/App
         run: |
+          if [ -d "mobile-app-package" ]; then cd mobile-app-package; fi
+          cd ios/App
           mkdir -p Payload
           cp -r build/App.xcarchive/Products/Applications/App.app Payload/
           zip -r AStarSwimSchools-Production.ipa Payload/
@@ -68,14 +71,14 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: AStarSwimSchools-iOS-IPA
-          path: mobile-app-package/AStarSwimSchools-Production.ipa
+          path: '**/AStarSwimSchools-Production.ipa'
           retention-days: 30
 
       - name: 10. Upload XCArchive Artifact
         uses: actions/upload-artifact@v4
         with:
           name: AStarSwimSchools-XcodeArchive
-          path: mobile-app-package/ios/App/build/App.xcarchive
+          path: '**/build/App.xcarchive'
           retention-days: 30
 
       - name: 11. Upload to TestFlight (Optional if secrets are set)
@@ -84,11 +87,11 @@ jobs:
           APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
           APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
           APP_STORE_CONNECT_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
-        working-directory: mobile-app-package/ios/App
         run: |
+          if [ -d "mobile-app-package" ]; then cd mobile-app-package; fi
           echo "Setting up App Store Connect API Key for automated TestFlight upload..."
           mkdir -p ~/.appstoreconnect/private_keys
           echo "$APP_STORE_CONNECT_PRIVATE_KEY" > ~/.appstoreconnect/private_keys/AuthKey_${APP_STORE_CONNECT_KEY_ID}.p8
-          xcrun altool --upload-app -f ../../AStarSwimSchools-Production.ipa -t ios \
+          xcrun altool --upload-app -f AStarSwimSchools-Production.ipa -t ios \
             --apiKey "$APP_STORE_CONNECT_KEY_ID" \
             --apiIssuer "$APP_STORE_CONNECT_ISSUER_ID"
