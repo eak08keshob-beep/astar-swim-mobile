@@ -1,0 +1,182 @@
+/* ==========================================================================
+   A STAR SWIM SCHOOLS — COMMERCIAL MOBILE POLISH SYSTEM (v2)
+   Unified High-Craft UI for Android & Apple iOS
+   Preserves 100% Core Functionality, Payments, and Live Vercel Auto-Updates
+   ========================================================================== */
+
+/* 1. Safe Area Insets & Base Resets */
+:root {
+  --sat: env(safe-area-inset-top, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --sal: env(safe-area-inset-left, 0px);
+  --sar: env(safe-area-inset-right, 0px);
+  --brand-navy: #1f3552;
+  --brand-blue: #1D5BB0;
+  --brand-sky: #0284c7;
+  --surface-bg: #f8fafc;
+}
+
+html, body {
+  -webkit-tap-highlight-color: transparent !important;
+  -webkit-touch-callout: none !important;
+  overscroll-behavior-y: none !important;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+}
+
+/* 2. Startup Animated Brand Splash Screen (Solid White Background) */
+#app-startup-splash {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 99999999 !important;
+  background-color: #ffffff !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.4s ease !important;
+}
+
+#app-startup-splash.fade-out {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  visibility: hidden !important;
+}
+
+.brand-loader-wrap {
+  position: relative !important;
+  width: 270px !important;
+  max-width: 82vw !important;
+  aspect-ratio: 1400 / 676 !important;
+  overflow: hidden !important;
+  background-color: #ffffff !important;
+}
+
+.brand-anim-layer {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  mix-blend-mode: multiply !important;
+  pointer-events: none !important;
+}
+
+.brand-anim-star {
+  transform-origin: 21% 53% !important;
+  animation: brand-star-rock 2.4s ease-in-out infinite !important;
+}
+
+.brand-anim-streak {
+  animation: brand-streak-sweep 2.4s cubic-bezier(0.3, 0.7, 0.3, 1) infinite !important;
+}
+.brand-anim-streak-1 { animation-delay: 0.3s !important; }
+.brand-anim-streak-2 { animation-delay: 0.15s !important; }
+.brand-anim-streak-3 { animation-delay: 0s !important; }
+
+.brand-anim-shooter {
+  position: absolute !important;
+  left: 0 !important;
+  top: 62% !important;
+  width: 9% !important;
+  height: auto !important;
+  opacity: 0 !important;
+  animation: brand-shoot 2.4s ease-in infinite !important;
+}
+
+@keyframes brand-star-rock {
+  0%, 100% { transform: rotate(-3deg) scale(1); }
+  50% { transform: rotate(4deg) scale(1.05); }
+}
+
+@keyframes brand-streak-sweep {
+  0% { clip-path: inset(0 100% 0 0); opacity: 1; }
+  45%, 75% { clip-path: inset(0 0 0 0); opacity: 1; }
+  100% { clip-path: inset(0 0 0 0); opacity: 0; }
+}
+
+@keyframes brand-shoot {
+  0% { transform: translate(-160%, -60%) rotate(0deg) scale(0.5); opacity: 0; }
+  15% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { transform: translate(1100%, 90%) rotate(360deg) scale(1); opacity: 0; }
+}
+
+/* 3. Sleek Sticky Header with Menu Trigger */
+header.sticky,
+[data-slot="sidebar-wrapper"] header {
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  background-color: rgba(255, 255, 255, 0.94) !important;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.85) !important;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.03) !important;
+  padding-top: max(var(--sat), 4px) !important;
+}
+
+/* 4. Side Menu Trigger & Close Button Visibility */
+[data-sidebar="trigger"],
+button[data-slot="sidebar-trigger"] {
+  min-height: 38px !important;
+  padding: 6px 12px !important;
+  border-radius: 12px !important;
+  background-color: #ffffff !important;
+  border: 1px solid rgba(203, 213, 225, 0.9) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+}
+
+/* 5. Search Bar Padding & Magnifying Glass Separation */
+input[type="search"] {
+  font-size: 13px !important;
+  min-height: 38px !important;
+  padding-left: 42px !important; /* Prevents text from colliding with search icon */
+  padding-right: 48px !important;
+  border-radius: 10px !important;
+  background-color: #ffffff !important;
+  border: 1px solid rgba(203, 213, 225, 0.8) !important;
+}
+
+input[type="search"]::placeholder {
+  font-size: 12px !important;
+  opacity: 0.65 !important;
+}
+
+/* Standard Inputs (Exclude Search from generic padding) */
+input:not([type="search"]), select, textarea {
+  font-size: 16px !important;
+  min-height: 46px !important;
+  border-radius: 12px !important;
+  border: 1px solid rgba(203, 213, 225, 0.8) !important;
+  padding: 0 14px !important;
+  background-color: #ffffff !important;
+}
+
+/* 6. Touch-Friendly Cards with Ambient Elevation */
+.card,
+[data-slot="card"],
+article,
+.border.bg-card {
+  border-radius: 18px !important;
+  border: 1px solid rgba(226, 232, 240, 0.85) !important;
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05), 0 1px 4px -1px rgba(15, 23, 42, 0.03) !important;
+  background-color: #ffffff !important;
+}
+
+/* 7. Touch Targets & Tactile Feedback */
+button,
+a.button,
+[role="button"] {
+  min-height: 44px !important;
+  border-radius: 12px !important;
+  font-weight: 600 !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  transition: transform 0.12s cubic-bezier(0.2, 0.8, 0.4, 1), opacity 0.12s ease !important;
+}
+
+button:active,
+a.button:active,
+[role="button"]:active {
+  transform: scale(0.975) !important;
+  opacity: 0.9 !important;
+}

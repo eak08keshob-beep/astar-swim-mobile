@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+  <title>Offline · A Star Swim Schools</title>
+  <style>
+    :root {
+      --bg: #1f3552;
+      --text: #ffffff;
+      --accent: #38bdf8;
+      --card-bg: rgba(255, 255, 255, 0.08);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: env(safe-area-inset-top, 24px) 24px env(safe-area-inset-bottom, 24px);
+      text-align: center;
+    }
+    .card {
+      background: var(--card-bg);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 16px;
+      padding: 32px 24px;
+      max-width: 360px;
+      width: 100%;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+    }
+    .icon {
+      width: 56px;
+      height: 56px;
+      margin: 0 auto 16px;
+      color: var(--accent);
+    }
+    h1 { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+    p { font-size: 14px; opacity: 0.85; line-height: 1.5; margin-bottom: 24px; }
+    button {
+      background-color: var(--accent);
+      color: #0f172a;
+      border: none;
+      border-radius: 8px;
+      padding: 12px 24px;
+      font-size: 15px;
+      font-weight: 600;
+      width: 100%;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    button:active { opacity: 0.8; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636a9 9 0 010 12.728m0 0l-2.829-2.829m2.829 2.829L21 21M15.536 8.464a5 5 0 010 7.072m0 0l-2.829-2.829m-4.243 4.243a9 9 0 01-12.728 0m0 0l2.829-2.829m-2.829 2.829L3 21M8.464 15.536a5 5 0 010-7.072m0 0l2.829 2.829" />
+    </svg>
+    <h1>No Connection</h1>
+    <p>A Star Swim Schools requires an active internet connection to access schedules, badges, and records.</p>
+    <button id="retry-btn" onclick="retryConnection()">Retry Connection</button>
+  </div>
+
+  <script>
+    const LIVE_URL = 'https://www.astarswimmanagement.com';
+
+    function retryConnection() {
+      const btn = document.getElementById('retry-btn');
+      btn.textContent = 'Connecting...';
+      btn.disabled = true;
+
+      fetch(LIVE_URL + '/api/app/me', { method: 'HEAD', credentials: 'omit', mode: 'no-cors' })
+        .then(() => {
+          window.location.href = LIVE_URL;
+        })
+        .catch(() => {
+          btn.textContent = 'Retry Connection';
+          btn.disabled = false;
+        });
+    }
+
+    window.addEventListener('online', () => {
+      window.location.href = LIVE_URL;
+    });
+  </script>
+</body>
+</html>

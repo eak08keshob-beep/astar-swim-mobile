@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+
+# Android Build & Cache
+android/app/build/
+android/.gradle/
+android/build/
+android/.idea/
+android/captures/
+android/local.properties
+android/*.iml
+
+# iOS Build & CocoaPods
+ios/App/Pods/
+ios/App/build/
+ios/App/DerivedData/
+ios/App/.idea/
+ios/App/*.xcworkspace/xcuserdata/
+ios/App/*.xcodeproj/xcuserdata/
+
+# Output binaries
+*.apk
+*.aab
+*.ipa
+
+# OS files
+.DS_Store
+Thumbs.db

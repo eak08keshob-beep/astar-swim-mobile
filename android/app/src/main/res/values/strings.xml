@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">A Star Swim Schools</string>
+    <string name="title_activity_main">A Star Swim Schools</string>
+    <string name="package_name">com.astarswimschools.parent</string>
+    <string name="custom_url_scheme">com.astarswimschools.parent</string>
+</resources>
