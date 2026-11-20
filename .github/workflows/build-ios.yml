@@ -14,7 +14,7 @@ on:
 jobs:
   build-ios:
     name: Build iOS IPA Package
-    runs-on: macos-13
+    runs-on: macos-latest
 
     steps:
       - name: 1. Check out repository
@@ -26,7 +26,7 @@ jobs:
           node-version: 20
 
       - name: 3. Select latest Xcode
-        run: sudo xcode-select -switch /Applications/Xcode_15.2.app || sudo xcode-select -switch /Applications/Xcode.app
+        run: sudo xcode-select -switch /Applications/Xcode_16.app || sudo xcode-select -switch /Applications/Xcode_15.4.app || sudo xcode-select -switch /Applications/Xcode.app
 
       - name: 4. Install Node dependencies
         run: |
