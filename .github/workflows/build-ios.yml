@@ -46,15 +46,18 @@ jobs:
           pod install --repo-update
 
       - name: 7. Configure App Store Connect API Key
-        if: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY != '' }}
         env:
           APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
           APP_STORE_CONNECT_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
         run: |
-          mkdir -p ~/.appstoreconnect/private_keys
-          echo "$APP_STORE_CONNECT_PRIVATE_KEY" > ~/.appstoreconnect/private_keys/AuthKey_${APP_STORE_CONNECT_KEY_ID}.p8
-          chmod 600 ~/.appstoreconnect/private_keys/AuthKey_${APP_STORE_CONNECT_KEY_ID}.p8
-          echo "App Store Connect API Key configured."
+          if [ -n "$APP_STORE_CONNECT_PRIVATE_KEY" ]; then
+            mkdir -p ~/.appstoreconnect/private_keys
+            echo "$APP_STORE_CONNECT_PRIVATE_KEY" > ~/.appstoreconnect/private_keys/AuthKey_${APP_STORE_CONNECT_KEY_ID}.p8
+            chmod 600 ~/.appstoreconnect/private_keys/AuthKey_${APP_STORE_CONNECT_KEY_ID}.p8
+            echo "App Store Connect API Key configured successfully."
+          else
+            echo "Notice: APP_STORE_CONNECT_PRIVATE_KEY secret is empty."
+          fi
 
       - name: 8. Build Xcode Archive
         env:
@@ -90,11 +93,16 @@ jobs:
           fi
 
       - name: 9. Export & Upload Directly to TestFlight
-        if: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY != '' }}
         env:
           APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
           APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          APP_STORE_CONNECT_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
         run: |
+          if [ -z "$APP_STORE_CONNECT_PRIVATE_KEY" ]; then
+            echo "Skipping TestFlight upload: APP_STORE_CONNECT_PRIVATE_KEY secret is not set."
+            exit 0
+          fi
+          
           if [ -d "mobile-app-package" ]; then cd mobile-app-package; fi
           cd ios/App
           
@@ -125,6 +133,8 @@ jobs:
             -authenticationKeyPath ~/.appstoreconnect/private_keys/AuthKey_${APP_STORE_CONNECT_KEY_ID}.p8 \
             -authenticationKeyID "$APP_STORE_CONNECT_KEY_ID" \
             -authenticationKeyIssuerID "$APP_STORE_CONNECT_ISSUER_ID"
+            
+          echo "TestFlight upload completed successfully!"
 
       - name: 10. Fallback Packaging into Local .IPA (For Direct PC Download)
         run: |
