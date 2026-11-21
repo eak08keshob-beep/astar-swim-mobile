@@ -86,5 +86,7 @@
 	<string>A Star Swim Schools accesses your photos to let you choose profile and verification images.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>A Star Swim Schools saves certificates, badges, and receipts to your photo library.</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 </dict>
 </plist>
