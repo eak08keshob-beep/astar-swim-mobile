@@ -92,14 +92,14 @@ jobs:
               CODE_SIGNING_REQUIRED=NO
           fi
 
-      - name: 9. Export & Upload Directly to TestFlight
+      - name: 9. Export Signed IPA & Upload to TestFlight
         env:
           APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
           APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
           APP_STORE_CONNECT_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
         run: |
           if [ -z "$APP_STORE_CONNECT_PRIVATE_KEY" ]; then
-            echo "Skipping TestFlight upload: APP_STORE_CONNECT_PRIVATE_KEY secret is not set."
+            echo "Notice: APP_STORE_CONNECT_PRIVATE_KEY secret is not configured. Skipping signed export & TestFlight upload."
             exit 0
           fi
           
@@ -113,8 +113,6 @@ jobs:
           <dict>
               <key>method</key>
               <string>app-store</string>
-              <key>destination</key>
-              <string>upload</string>
               <key>signingStyle</key>
               <string>automatic</string>
               <key>teamID</key>
@@ -125,27 +123,47 @@ jobs:
           </plist>
           EOF
           
-          echo "Signing and uploading directly to TestFlight..."
+          mkdir -p build/Export
+          echo "Exporting signed production IPA..."
           xcodebuild -exportArchive \
             -archivePath build/App.xcarchive \
+            -exportPath build/Export \
             -exportOptionsPlist exportOptions.plist \
             -allowProvisioningUpdates \
             -authenticationKeyPath ~/.appstoreconnect/private_keys/AuthKey_${APP_STORE_CONNECT_KEY_ID}.p8 \
             -authenticationKeyID "$APP_STORE_CONNECT_KEY_ID" \
             -authenticationKeyIssuerID "$APP_STORE_CONNECT_ISSUER_ID"
             
-          echo "TestFlight upload completed successfully!"
+          SIGNED_IPA=$(find build/Export -name "*.ipa" | head -n 1)
+          if [ -n "$SIGNED_IPA" ]; then
+            echo "Signed IPA ready: $SIGNED_IPA"
+            cp "$SIGNED_IPA" ../../AStarSwimSchools-Production.ipa
+            
+            echo "Uploading signed IPA to Apple TestFlight via xcrun altool..."
+            xcrun altool --upload-app -f "$SIGNED_IPA" -t ios \
+              --apiKey "$APP_STORE_CONNECT_KEY_ID" \
+              --apiIssuer "$APP_STORE_CONNECT_ISSUER_ID"
+            echo "Successfully delivered to TestFlight!"
+          else
+            echo "Error: Signed IPA was not produced by xcodebuild."
+            exit 1
+          fi
 
-      - name: 10. Fallback Packaging into Local .IPA (For Direct PC Download)
+      - name: 10. Fallback Packaging into Unsigned IPA (If No Secrets)
+        if: ${{ always() }}
         run: |
-          if [ -d "mobile-app-package" ]; then cd mobile-app-package; fi
-          cd ios/App
-          mkdir -p Payload
-          cp -r build/App.xcarchive/Products/Applications/App.app Payload/
-          zip -r AStarSwimSchools-Production.ipa Payload/
-          mv AStarSwimSchools-Production.ipa ../../
+          if [ ! -f "AStarSwimSchools-Production.ipa" ]; then
+            echo "Packaging fallback ad-hoc IPA..."
+            if [ -d "mobile-app-package" ]; then cd mobile-app-package; fi
+            cd ios/App
+            mkdir -p Payload
+            cp -r build/App.xcarchive/Products/Applications/App.app Payload/ 2>/dev/null || true
+            zip -r AStarSwimSchools-Production.ipa Payload/ 2>/dev/null || true
+            mv AStarSwimSchools-Production.ipa ../../ 2>/dev/null || true
+          fi
 
       - name: 11. Upload IPA Artifact to GitHub
+        if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:
           name: AStarSwimSchools-iOS-IPA
