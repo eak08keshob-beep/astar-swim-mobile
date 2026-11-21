@@ -1,4 +1,4 @@
-name: Build & Package iOS App (.IPA)
+name: Build & Package iOS App & Deploy to TestFlight
 
 on:
   push:
@@ -6,14 +6,14 @@ on:
   workflow_dispatch:
     inputs:
       distribute_testflight:
-        description: 'Upload directly to TestFlight? (Requires Apple Secrets)'
+        description: 'Upload directly to TestFlight?'
         required: true
         type: boolean
-        default: false
+        default: true
 
 jobs:
-  build-ios:
-    name: Build iOS IPA Package
+  build-and-deploy-ios:
+    name: Build & Deploy iOS App to TestFlight
     runs-on: macos-latest
 
     steps:
@@ -26,7 +26,8 @@ jobs:
           node-version: 20
 
       - name: 3. Select latest Xcode
-        run: sudo xcode-select -switch /Applications/Xcode_16.app || sudo xcode-select -switch /Applications/Xcode_15.4.app || sudo xcode-select -switch /Applications/Xcode.app
+        run: |
+          sudo xcode-select -switch /Applications/Xcode_16.app || sudo xcode-select -switch /Applications/Xcode_15.4.app || sudo xcode-select -switch /Applications/Xcode.app
 
       - name: 4. Install Node dependencies
         run: |
@@ -44,21 +45,88 @@ jobs:
           cd ios/App
           pod install --repo-update
 
-      - name: 7. Build Xcode Archive
+      - name: 7. Configure App Store Connect API Key
+        if: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY != '' }}
+        env:
+          APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          APP_STORE_CONNECT_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
+        run: |
+          mkdir -p ~/.appstoreconnect/private_keys
+          echo "$APP_STORE_CONNECT_PRIVATE_KEY" > ~/.appstoreconnect/private_keys/AuthKey_${APP_STORE_CONNECT_KEY_ID}.p8
+          chmod 600 ~/.appstoreconnect/private_keys/AuthKey_${APP_STORE_CONNECT_KEY_ID}.p8
+          echo "App Store Connect API Key configured."
+
+      - name: 8. Build Xcode Archive
+        env:
+          APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          APP_STORE_CONNECT_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
         run: |
           if [ -d "mobile-app-package" ]; then cd mobile-app-package; fi
           cd ios/App
           mkdir -p build
-          xcodebuild archive \
-            -workspace App.xcworkspace \
-            -scheme App \
-            -destination "generic/platform=iOS" \
-            -archivePath build/App.xcarchive \
-            CODE_SIGNING_ALLOWED=NO \
-            CODE_SIGN_IDENTITY="" \
-            CODE_SIGNING_REQUIRED=NO
+          
+          if [ -n "$APP_STORE_CONNECT_PRIVATE_KEY" ]; then
+            echo "Building archive with App Store Connect automatic provisioning..."
+            xcodebuild archive \
+              -workspace App.xcworkspace \
+              -scheme App \
+              -destination "generic/platform=iOS" \
+              -archivePath build/App.xcarchive \
+              -allowProvisioningUpdates \
+              -authenticationKeyPath ~/.appstoreconnect/private_keys/AuthKey_${APP_STORE_CONNECT_KEY_ID}.p8 \
+              -authenticationKeyID "$APP_STORE_CONNECT_KEY_ID" \
+              -authenticationKeyIssuerID "$APP_STORE_CONNECT_ISSUER_ID"
+          else
+            echo "Building ad-hoc unsigned archive..."
+            xcodebuild archive \
+              -workspace App.xcworkspace \
+              -scheme App \
+              -destination "generic/platform=iOS" \
+              -archivePath build/App.xcarchive \
+              CODE_SIGNING_ALLOWED=NO \
+              CODE_SIGN_IDENTITY="" \
+              CODE_SIGNING_REQUIRED=NO
+          fi
 
-      - name: 8. Package into .IPA File
+      - name: 9. Export & Upload Directly to TestFlight
+        if: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY != '' }}
+        env:
+          APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+        run: |
+          if [ -d "mobile-app-package" ]; then cd mobile-app-package; fi
+          cd ios/App
+          
+          cat << 'EOF' > exportOptions.plist
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+              <key>method</key>
+              <string>app-store</string>
+              <key>destination</key>
+              <string>upload</string>
+              <key>signingStyle</key>
+              <string>automatic</string>
+              <key>teamID</key>
+              <string>DH67Z886MU</string>
+              <key>manageAppVersionAndBuildNumber</key>
+              <true/>
+          </dict>
+          </plist>
+          EOF
+          
+          echo "Signing and uploading directly to TestFlight..."
+          xcodebuild -exportArchive \
+            -archivePath build/App.xcarchive \
+            -exportOptionsPlist exportOptions.plist \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath ~/.appstoreconnect/private_keys/AuthKey_${APP_STORE_CONNECT_KEY_ID}.p8 \
+            -authenticationKeyID "$APP_STORE_CONNECT_KEY_ID" \
+            -authenticationKeyIssuerID "$APP_STORE_CONNECT_ISSUER_ID"
+
+      - name: 10. Fallback Packaging into Local .IPA (For Direct PC Download)
         run: |
           if [ -d "mobile-app-package" ]; then cd mobile-app-package; fi
           cd ios/App
@@ -67,31 +135,9 @@ jobs:
           zip -r AStarSwimSchools-Production.ipa Payload/
           mv AStarSwimSchools-Production.ipa ../../
 
-      - name: 9. Upload IPA Artifact (Download directly to PC)
+      - name: 11. Upload IPA Artifact to GitHub
         uses: actions/upload-artifact@v4
         with:
           name: AStarSwimSchools-iOS-IPA
           path: '**/AStarSwimSchools-Production.ipa'
           retention-days: 30
-
-      - name: 10. Upload XCArchive Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: AStarSwimSchools-XcodeArchive
-          path: '**/build/App.xcarchive'
-          retention-days: 30
-
-      - name: 11. Upload to TestFlight (Optional if secrets are set)
-        if: ${{ inputs.distribute_testflight == true && env.APP_STORE_CONNECT_PRIVATE_KEY != '' }}
-        env:
-          APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
-          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
-          APP_STORE_CONNECT_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
-        run: |
-          if [ -d "mobile-app-package" ]; then cd mobile-app-package; fi
-          echo "Setting up App Store Connect API Key for automated TestFlight upload..."
-          mkdir -p ~/.appstoreconnect/private_keys
-          echo "$APP_STORE_CONNECT_PRIVATE_KEY" > ~/.appstoreconnect/private_keys/AuthKey_${APP_STORE_CONNECT_KEY_ID}.p8
-          xcrun altool --upload-app -f AStarSwimSchools-Production.ipa -t ios \
-            --apiKey "$APP_STORE_CONNECT_KEY_ID" \
-            --apiIssuer "$APP_STORE_CONNECT_ISSUER_ID"
