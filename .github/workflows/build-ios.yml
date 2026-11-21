@@ -59,110 +59,36 @@ jobs:
             echo "Notice: APP_STORE_CONNECT_PRIVATE_KEY secret is empty."
           fi
 
-      - name: 8. Build Xcode Archive
+      - name: 8. Build, Sign & Deploy to TestFlight via Fastlane
         env:
           APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
           APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
           APP_STORE_CONNECT_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
         run: |
-          if [ -d "mobile-app-package" ]; then cd mobile-app-package; fi
-          cd ios/App
-          mkdir -p build
-          
           if [ -n "$APP_STORE_CONNECT_PRIVATE_KEY" ]; then
-            echo "Building archive with App Store Connect automatic provisioning..."
-            xcodebuild archive \
-              -workspace App.xcworkspace \
-              -scheme App \
-              -destination "generic/platform=iOS" \
-              -archivePath build/App.xcarchive \
-              -allowProvisioningUpdates \
-              -authenticationKeyPath ~/.appstoreconnect/private_keys/AuthKey_${APP_STORE_CONNECT_KEY_ID}.p8 \
-              -authenticationKeyID "$APP_STORE_CONNECT_KEY_ID" \
-              -authenticationKeyIssuerID "$APP_STORE_CONNECT_ISSUER_ID"
+            echo "Running Fastlane for automatic certificate creation, code signing, and TestFlight upload..."
+            fastlane ios beta
           else
-            echo "Building ad-hoc unsigned archive..."
-            xcodebuild archive \
-              -workspace App.xcworkspace \
-              -scheme App \
-              -destination "generic/platform=iOS" \
-              -archivePath build/App.xcarchive \
-              CODE_SIGNING_ALLOWED=NO \
-              CODE_SIGN_IDENTITY="" \
-              CODE_SIGNING_REQUIRED=NO
+            echo "Notice: APP_STORE_CONNECT_PRIVATE_KEY is missing. Building ad-hoc unsigned archive..."
+            cd ios/App
+            mkdir -p build
+            xcodebuild archive               -workspace App.xcworkspace               -scheme App               -destination "generic/platform=iOS"               -archivePath build/App.xcarchive               CODE_SIGNING_ALLOWED=NO               CODE_SIGN_IDENTITY=""               CODE_SIGNING_REQUIRED=NO
           fi
 
-      - name: 9. Export Signed IPA & Upload to TestFlight
-        env:
-          APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
-          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
-          APP_STORE_CONNECT_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
-        run: |
-          if [ -z "$APP_STORE_CONNECT_PRIVATE_KEY" ]; then
-            echo "Notice: APP_STORE_CONNECT_PRIVATE_KEY secret is not configured. Skipping signed export & TestFlight upload."
-            exit 0
-          fi
-          
-          if [ -d "mobile-app-package" ]; then cd mobile-app-package; fi
-          cd ios/App
-          
-          cat << 'EOF' > exportOptions.plist
-          <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-          <dict>
-              <key>method</key>
-              <string>app-store</string>
-              <key>signingStyle</key>
-              <string>automatic</string>
-              <key>teamID</key>
-              <string>DH67Z886MU</string>
-              <key>manageAppVersionAndBuildNumber</key>
-              <true/>
-          </dict>
-          </plist>
-          EOF
-          
-          mkdir -p build/Export
-          echo "Exporting signed production IPA..."
-          xcodebuild -exportArchive \
-            -archivePath build/App.xcarchive \
-            -exportPath build/Export \
-            -exportOptionsPlist exportOptions.plist \
-            -allowProvisioningUpdates \
-            -authenticationKeyPath ~/.appstoreconnect/private_keys/AuthKey_${APP_STORE_CONNECT_KEY_ID}.p8 \
-            -authenticationKeyID "$APP_STORE_CONNECT_KEY_ID" \
-            -authenticationKeyIssuerID "$APP_STORE_CONNECT_ISSUER_ID"
-            
-          SIGNED_IPA=$(find build/Export -name "*.ipa" | head -n 1)
-          if [ -n "$SIGNED_IPA" ]; then
-            echo "Signed IPA ready: $SIGNED_IPA"
-            cp "$SIGNED_IPA" ../../AStarSwimSchools-Production.ipa
-            
-            echo "Uploading signed IPA to Apple TestFlight via xcrun altool..."
-            xcrun altool --upload-app -f "$SIGNED_IPA" -t ios \
-              --apiKey "$APP_STORE_CONNECT_KEY_ID" \
-              --apiIssuer "$APP_STORE_CONNECT_ISSUER_ID"
-            echo "Successfully delivered to TestFlight!"
-          else
-            echo "Error: Signed IPA was not produced by xcodebuild."
-            exit 1
-          fi
-
-      - name: 10. Fallback Packaging into Unsigned IPA (If No Secrets)
+      - name: 9. Fallback Packaging into IPA (If Not Yet Created)
         if: ${{ always() }}
         run: |
-          if [ ! -f "AStarSwimSchools-Production.ipa" ]; then
-            echo "Packaging fallback ad-hoc IPA..."
-            if [ -d "mobile-app-package" ]; then cd mobile-app-package; fi
+          if [ ! -f "build/AStarSwimSchools-Production.ipa" ] && [ ! -f "AStarSwimSchools-Production.ipa" ]; then
+            echo "Packaging archive into IPA..."
             cd ios/App
             mkdir -p Payload
             cp -r build/App.xcarchive/Products/Applications/App.app Payload/ 2>/dev/null || true
-            zip -r AStarSwimSchools-Production.ipa Payload/ 2>/dev/null || true
-            mv AStarSwimSchools-Production.ipa ../../ 2>/dev/null || true
+            zip -r ../../AStarSwimSchools-Production.ipa Payload/ 2>/dev/null || true
+          elif [ -f "build/AStarSwimSchools-Production.ipa" ]; then
+            cp "build/AStarSwimSchools-Production.ipa" ./AStarSwimSchools-Production.ipa
           fi
 
-      - name: 11. Upload IPA Artifact to GitHub
+      - name: 10. Upload IPA Artifact to GitHub
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:
