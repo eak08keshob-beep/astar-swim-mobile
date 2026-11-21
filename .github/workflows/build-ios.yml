@@ -81,11 +81,7 @@ jobs:
             -configuration Release \
             -destination 'generic/platform=iOS' \
             -archivePath build/App.xcarchive \
-            CODE_SIGN_STYLE=Manual \
-            CODE_SIGN_IDENTITY="Apple Distribution" \
-            PROVISIONING_PROFILE="3eec1108-e221-4fd1-8f11-4bd4cc792bf2" \
-            PROVISIONING_PROFILE_SPECIFIER="A Star Swim App Store Distribution Profile" \
-            DEVELOPMENT_TEAM=DH67Z886MU
+            CODE_SIGNING_ALLOWED=NO
 
       - name: 9. Export Signed Production IPA
         run: |
