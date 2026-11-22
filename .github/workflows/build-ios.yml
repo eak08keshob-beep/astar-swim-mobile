@@ -39,19 +39,9 @@ jobs:
           npx expo prebuild --platform ios --clean
           ls -la ios
 
-      - name: 6. Configure CocoaPods & strip sub-target signing
+      - name: 6. Install CocoaPods
         run: |
           cd ios
-          echo "" >> Podfile
-          echo 'post_install do |installer|' >> Podfile
-          echo '  installer.pods_project.targets.each do |target|' >> Podfile
-          echo '    target.build_configurations.each do |config|' >> Podfile
-          echo '      config.build_settings["CODE_SIGNING_ALLOWED"] = "NO"' >> Podfile
-          echo '      config.build_settings["EXPANDED_CODE_SIGN_IDENTITY"] = ""' >> Podfile
-          echo '      config.build_settings["CODE_SIGNING_REQUIRED"] = "NO"' >> Podfile
-          echo '    end' >> Podfile
-          echo '  end' >> Podfile
-          echo 'end' >> Podfile
           pod install --repo-update
 
       - name: 7. Configure Keychain & Apple Certificates
