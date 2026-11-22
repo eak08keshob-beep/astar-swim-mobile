@@ -1,0 +1,59 @@
+{
+  "expo": {
+    "name": "A Star Swim Schools",
+    "slug": "a-star-swim-schools",
+    "scheme": "astarswim",
+    "version": "1.0.5",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/logo.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FFFFFF"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.astarswimschools.parent",
+      "appleTeamId": "DH67Z886MU",
+      "buildNumber": "6",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "package": "com.astarswimschools.parent",
+      "versionCode": 6,
+      "adaptiveIcon": {
+        "backgroundColor": "#FFFFFF",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/mark.png",
+      "output": "single"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      "expo-image",
+      [
+        "expo-notifications",
+        {
+          "color": "#1D5BB0"
+        }
+      ]
+    ],
+    "experiments": {
+      "baseUrl": "/parent"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "fd2e6705-5501-4056-9959-b278d05ae7b1"
+      }
+    }
+  }
+}

@@ -1,28 +1,41 @@
-# Dependencies
+# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
+
+# dependencies
 node_modules/
 
-# Android Build & Cache
-android/app/build/
-android/.gradle/
-android/build/
-android/.idea/
-android/captures/
-android/local.properties
-android/*.iml
+# Expo
+.expo/
+dist/
+web-build/
+expo-env.d.ts
 
-# iOS Build & CocoaPods
-ios/App/Pods/
-ios/App/build/
-ios/App/DerivedData/
-ios/App/.idea/
-ios/App/*.xcworkspace/xcuserdata/
-ios/App/*.xcodeproj/xcuserdata/
+# Native
+.kotlin/
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
 
-# Output binaries
-*.apk
-*.aab
-*.ipa
+# Metro
+.metro-health-check*
 
-# OS files
+# debug
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# macOS
 .DS_Store
-Thumbs.db
+*.pem
+
+# local env files
+.env*.local
+
+# typescript
+*.tsbuildinfo
+
+# generated native folders
+/ios
+/android
