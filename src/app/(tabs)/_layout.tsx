@@ -11,8 +11,10 @@ import { useApi } from '../../lib/use-api'
 type IconName = keyof typeof Ionicons.glyphMap
 
 const icon =
-  (name: IconName) =>
-  ({ color, size }: { color: ColorValue; size: number }) => <Ionicons name={name} color={color as string} size={size} />
+  (active: IconName, inactive: IconName) =>
+  ({ color, size, focused }: { color: ColorValue; size: number; focused: boolean }) => (
+    <Ionicons name={focused ? active : inactive} color={color as string} size={size} />
+  )
 
 export default function TabsLayout() {
   const { token } = useSession()
@@ -37,18 +39,19 @@ export default function TabsLayout() {
         sceneStyle: { backgroundColor: colors.background },
       }}
     >
-      <Tabs.Screen name="index" options={{ title: 'Home', headerShown: false, tabBarIcon: icon('home-outline') }} />
-      <Tabs.Screen name="swimmers" options={{ title: 'Swimmers', tabBarIcon: icon('water-outline') }} />
+      <Tabs.Screen name="index" options={{ title: 'Home', headerShown: false, tabBarIcon: icon('home', 'home-outline') }} />
+      <Tabs.Screen name="swimmers" options={{ title: 'Swimmers', tabBarIcon: icon('people', 'people-outline') }} />
       <Tabs.Screen
         name="messages"
         options={{
           title: 'Messages',
-          tabBarIcon: icon('chatbubbles-outline'),
+          tabBarIcon: icon('chatbubble-ellipses', 'chatbubble-ellipses-outline'),
           tabBarBadge: summary?.unreadCount ? summary.unreadCount : undefined,
           tabBarBadgeStyle: { backgroundColor: colors.danger },
         }}
       />
-      <Tabs.Screen name="payments" options={{ title: 'Payments', tabBarIcon: icon('card-outline') }} />
+      <Tabs.Screen name="payments" options={{ title: 'Payments', tabBarIcon: icon('wallet', 'wallet-outline') }} />
+      <Tabs.Screen name="records" options={{ title: 'Records', tabBarIcon: icon('document-text', 'document-text-outline') }} />
     </Tabs>
   )
 }

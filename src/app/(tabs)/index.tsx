@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { ErrorText, Loading, Screen, SectionLabel } from '../../components/ui'
 import type { Summary, Swimmer } from '../../lib/api'
 import { dayName, formatMoney, formatTime } from '../../lib/format'
-import { registerForPush, usePushState } from '../../lib/push'
+import { getLastPushError, registerForPush, usePushState } from '../../lib/push'
 import { useSession } from '../../lib/session'
 import { colors, radius, space, type } from '../../lib/theme'
 import { useApi } from '../../lib/use-api'
@@ -142,14 +142,20 @@ export default function Home() {
         </View>
       )}
 
-      {pushState === 'undetermined' ? (
+      {pushState === 'undetermined' || pushState === 'error' ? (
         <View style={styles.notify}>
           <View style={[styles.actionIcon, { backgroundColor: colors.goldSoft }]}>
             <Ionicons name="notifications" size={20} color="#8A5A00" />
           </View>
           <View style={{ flex: 1, gap: 2 }}>
-            <Text style={[type.body, { fontWeight: '700' }]}>Never miss an update</Text>
-            <Text style={type.small}>Get alerts for messages, badges, payments and lesson reminders.</Text>
+            <Text style={[type.body, { fontWeight: '700' }]}>
+              {pushState === 'error' ? "Notifications couldn't turn on" : 'Never miss an update'}
+            </Text>
+            <Text style={type.small}>
+              {pushState === 'error'
+                ? getLastPushError() ?? 'Something went wrong. Tap to try again.'
+                : 'Get alerts for messages, badges, payments and lesson reminders.'}
+            </Text>
           </View>
           <Pressable
             accessibilityRole="button"

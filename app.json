@@ -3,7 +3,7 @@
     "name": "A Star Swim Schools",
     "slug": "a-star-swim-schools",
     "scheme": "astarswim",
-    "version": "1.0.5",
+    "version": "1.0.6",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -16,14 +16,14 @@
       "supportsTablet": false,
       "bundleIdentifier": "com.astarswimschools.parent",
       "appleTeamId": "DH67Z886MU",
-      "buildNumber": "7",
+      "buildNumber": "8",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
       "package": "com.astarswimschools.parent",
-      "versionCode": 6,
+      "versionCode": 8,
       "adaptiveIcon": {
         "backgroundColor": "#FFFFFF",
         "foregroundImage": "./assets/android-icon-foreground.png",

@@ -1,7 +1,7 @@
 import { router, useLocalSearchParams } from 'expo-router'
 import { useState } from 'react'
 import { Text } from 'react-native'
-import { Button, ErrorText, Field, Screen } from '../components/ui'
+import { Button, ErrorText, Field, Screen, StaffLoginLink } from '../components/ui'
 import { ApiError, api, type AuthResult } from '../lib/api'
 import { useSession } from '../lib/session'
 import { type } from '../lib/theme'
@@ -74,6 +74,7 @@ export default function SignIn() {
       {!showCode ? (
         <Button label="Link another family with a code" variant="secondary" onPress={() => setShowCode(true)} />
       ) : null}
+      <StaffLoginLink />
     </Screen>
   )
 }

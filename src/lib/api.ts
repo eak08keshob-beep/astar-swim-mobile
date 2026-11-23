@@ -1,4 +1,4 @@
-const BASE_URL = (process.env.EXPO_PUBLIC_API_URL ?? 'https://www.astarswimmanagement.com').replace(/\/$/, '')
+export const BASE_URL = (process.env.EXPO_PUBLIC_API_URL ?? 'https://www.astarswimmanagement.com').replace(/\/$/, '')
 
 export class ApiError extends Error {
   status: number
@@ -87,6 +87,33 @@ export type MessageSummary = {
 export type Reply = { id: number; body: string; fromRole: string; authorName: string | null; createdAt: string }
 
 export type MessageDetail = MessageSummary & { replies: Reply[] }
+
+export type AccidentRecord = {
+  id: number
+  reference: string
+  swimmerId: number
+  swimmerName: string
+  occurredAt: string
+  location: string | null
+  description: string
+  treatment: string | null
+  parentSignedAt: string | null
+  staffSignedAt: string | null
+  pdfPath: string
+}
+
+export type SignedDocument = {
+  swimmerId: number
+  swimmerName: string
+  kind: string
+  title: string
+  reference: string
+  signatureName: string
+  signedAt: string
+  pdfPath: string
+}
+
+export type Records = { accidents: AccidentRecord[]; documents: SignedDocument[] }
 
 export type ScheduleLesson = { date: string; badges?: boolean; closed?: boolean; note?: string }
 

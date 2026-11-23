@@ -15,6 +15,7 @@ jobs:
   build-and-deploy-ios:
     name: Build, Sign & Deploy to TestFlight
     runs-on: macos-latest
+    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.distribute_testflight == 'true' }}
 
     steps:
       - name: 1. Check out repository
@@ -172,12 +173,13 @@ jobs:
           chmod +x gradlew
           ./gradlew assembleDebug --no-daemon
           mkdir -p ../dist-apk
-          find app/build/outputs/apk -name "*.apk" -exec cp {} ../dist-apk/ \;
+          APK_FILE=$(find app/build/outputs/apk -name "*.apk" | head -n 1)
+          cp "$APK_FILE" ../dist-apk/AStarSwimSchools-v1.0.6-Preview.apk
           ls -lh ../dist-apk
 
       - name: 7. Upload Android APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: AStarSwimSchools-Android-APK
-          path: dist-apk/*.apk
+          name: AStarSwimSchools-v1.0.6-Preview-APK
+          path: dist-apk/AStarSwimSchools-v1.0.6-Preview.apk
           retention-days: 30

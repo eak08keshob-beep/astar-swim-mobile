@@ -1,7 +1,7 @@
 import { router, useLocalSearchParams } from 'expo-router'
 import { useEffect, useState } from 'react'
 import { Text } from 'react-native'
-import { Button, Card, ErrorText, Field, Screen } from '../components/ui'
+import { Button, Card, ErrorText, Field, Screen, StaffLoginLink } from '../components/ui'
 import { ApiError, api, type AuthResult, type Invite } from '../lib/api'
 import { useSession } from '../lib/session'
 import { type } from '../lib/theme'
@@ -75,6 +75,7 @@ export default function Join() {
         />
         <ErrorText message={error} />
         <Button label="Continue" onPress={() => lookUp()} loading={busy} />
+        <StaffLoginLink />
       </Screen>
     )
   }

@@ -2,7 +2,7 @@ import { Image } from 'expo-image'
 import { router } from 'expo-router'
 import { StyleSheet, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { Button } from '../components/ui'
+import { Button, StaffLoginLink } from '../components/ui'
 import { colors, space, type } from '../lib/theme'
 
 export default function Welcome() {
@@ -26,6 +26,7 @@ export default function Welcome() {
         <Text style={[type.small, styles.center]}>
           Your invite code is in the welcome email from the school. Ask at reception if you can&apos;t find it.
         </Text>
+        <StaffLoginLink />
       </View>
     </SafeAreaView>
   )

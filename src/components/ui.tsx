@@ -1,6 +1,9 @@
+import Ionicons from '@expo/vector-icons/Ionicons'
 import type { ReactNode } from 'react'
 import {
   ActivityIndicator,
+  Linking,
+  Platform,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -11,6 +14,7 @@ import {
   type TextInputProps,
   type ViewStyle,
 } from 'react-native'
+import { BASE_URL } from '../lib/api'
 import { colors, radius, space, type } from '../lib/theme'
 
 export function Screen({
@@ -73,6 +77,29 @@ export function Button({
       ) : (
         <Text style={[styles.buttonText, { color: primary ? colors.onPrimary : colors.primary }]}>{label}</Text>
       )}
+    </Pressable>
+  )
+}
+
+const STAFF_LOGIN_URL = `${BASE_URL}/staff-login`
+
+function openStaffLogin() {
+  // The web build is served from the school site, so stay in the same tab instead of opening a new one.
+  if (Platform.OS === 'web') globalThis.location?.assign(STAFF_LOGIN_URL)
+  else Linking.openURL(STAFF_LOGIN_URL)
+}
+
+export function StaffLoginLink() {
+  return (
+    <Pressable
+      accessibilityRole="link"
+      accessibilityHint="Opens the A Star Swim Schools staff sign in"
+      onPress={openStaffLogin}
+      hitSlop={8}
+      style={({ pressed }) => [styles.staffLink, pressed && { opacity: 0.6 }]}
+    >
+      <Ionicons name="lock-closed-outline" size={16} color={colors.muted} />
+      <Text style={styles.staffLinkText}>Staff login</Text>
     </Pressable>
   )
 }
@@ -156,4 +183,14 @@ const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background, padding: space.xxl },
   pill: { alignSelf: 'flex-start', borderRadius: radius.pill, paddingHorizontal: space.sm, paddingVertical: 3 },
   pillText: { fontSize: 12, fontWeight: '600' },
+  staffLink: {
+    minHeight: 44,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: space.xs,
+    alignSelf: 'center',
+    paddingHorizontal: space.md,
+  },
+  staffLinkText: { fontSize: 15, fontWeight: '600', color: colors.muted },
 })

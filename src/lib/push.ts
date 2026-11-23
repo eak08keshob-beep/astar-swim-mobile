@@ -18,11 +18,25 @@ Notifications.setNotificationHandler({
 
 export const pushSupported = Platform.OS !== 'web' && Device.isDevice
 
-export type PushState = 'unsupported' | 'granted' | 'denied' | 'undetermined'
+export type PushState = 'unsupported' | 'granted' | 'denied' | 'undetermined' | 'error'
+
+let lastPushError: string | null = null
+export const getLastPushError = () => lastPushError
+
+function reportPushError(sessionToken: string, stage: string, err: unknown) {
+  const message = err instanceof Error ? err.message : String(err)
+  lastPushError = message
+  api('/push-error', {
+    token: sessionToken,
+    method: 'POST',
+    body: { stage, message: message.slice(0, 500), platform: Platform.OS, isDevice: Device.isDevice, appOwnership: Constants.appOwnership ?? null },
+  }).catch(() => {})
+}
 
 /** Asks for notification permission and sends this device's push token to the school. */
 export async function registerForPush(sessionToken: string): Promise<PushState> {
   if (!pushSupported) return 'unsupported'
+  let stage = 'permission'
   try {
     if (Platform.OS === 'android') {
       await Notifications.setNotificationChannelAsync('default', {
@@ -37,12 +51,19 @@ export async function registerForPush(sessionToken: string): Promise<PushState> 
     if (status !== 'granted') return status === 'denied' ? 'denied' : 'undetermined'
 
     const projectId = Constants.expoConfig?.extra?.eas?.projectId ?? Constants.easConfig?.projectId
-    if (!projectId) return 'granted'
+    if (!projectId) {
+      reportPushError(sessionToken, 'config', new Error('No Expo project ID in this build'))
+      return 'error'
+    }
+    stage = 'expo-token'
     const { data } = await Notifications.getExpoPushTokenAsync({ projectId })
+    stage = 'save-token'
     await api('/push-token', { token: sessionToken, method: 'POST', body: { token: data, platform: Platform.OS } })
+    lastPushError = null
     return 'granted'
-  } catch {
-    return 'undetermined'
+  } catch (err) {
+    reportPushError(sessionToken, stage, err)
+    return 'error'
   }
 }
 
