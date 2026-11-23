@@ -1,5 +1,4 @@
 import Constants from 'expo-constants'
-import * as Device from 'expo-device'
 import * as Notifications from 'expo-notifications'
 import { router } from 'expo-router'
 import { useEffect, useState } from 'react'
@@ -9,6 +8,7 @@ import { api } from './api'
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
+    shouldShowAlert: true,
     shouldShowBanner: true,
     shouldShowList: true,
     shouldPlaySound: true,
@@ -16,7 +16,7 @@ Notifications.setNotificationHandler({
   }),
 })
 
-export const pushSupported = Platform.OS !== 'web' && Device.isDevice
+export const pushSupported = Platform.OS !== 'web'
 
 export type PushState = 'unsupported' | 'granted' | 'denied' | 'undetermined' | 'error'
 
@@ -29,36 +29,90 @@ function reportPushError(sessionToken: string, stage: string, err: unknown) {
   api('/push-error', {
     token: sessionToken,
     method: 'POST',
-    body: { stage, message: message.slice(0, 500), platform: Platform.OS, isDevice: Device.isDevice, appOwnership: Constants.appOwnership ?? null },
+    body: {
+      stage,
+      message: message.slice(0, 500),
+      platform: Platform.OS,
+      isDevice: true,
+      appOwnership: Constants.appOwnership ?? null,
+    },
   }).catch(() => {})
 }
 
-/** Asks for notification permission and sends this device's push token to the school. */
+/** Configures high-priority notification channel for Android */
+export async function ensureNotificationChannel(): Promise<void> {
+  if (Platform.OS === 'android') {
+    await Notifications.setNotificationChannelAsync('default', {
+      name: 'Messages and reminders',
+      importance: Notifications.AndroidImportance.MAX,
+      vibrationPattern: [0, 250, 150, 250],
+      lightColor: '#1D5BB0',
+      sound: 'default',
+      enableVibrate: true,
+      showBadge: true,
+      enableLights: true,
+      bypassDnd: false,
+      lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
+    })
+  }
+}
+
+/** Triggers system notification permission prompt (e.g. on app launch) */
+export async function requestPushPermission(): Promise<boolean> {
+  if (!pushSupported) return false
+  try {
+    await ensureNotificationChannel()
+    let { status } = await Notifications.getPermissionsAsync()
+    if (status !== 'granted') {
+      const res = await Notifications.requestPermissionsAsync({
+        ios: {
+          allowAlert: true,
+          allowBadge: true,
+          allowSound: true,
+        },
+        android: {},
+      })
+      status = res.status
+    }
+    return status === 'granted'
+  } catch {
+    return false
+  }
+}
+
+/** Asks for notification permission and registers device push token with backend */
 export async function registerForPush(sessionToken: string): Promise<PushState> {
   if (!pushSupported) return 'unsupported'
   let stage = 'permission'
   try {
-    if (Platform.OS === 'android') {
-      await Notifications.setNotificationChannelAsync('default', {
-        name: 'Messages and reminders',
-        importance: Notifications.AndroidImportance.HIGH,
-        vibrationPattern: [0, 200, 120, 200],
-        lightColor: '#1D5BB0',
-      })
-    }
+    await ensureNotificationChannel()
     let { status } = await Notifications.getPermissionsAsync()
-    if (status !== 'granted') status = (await Notifications.requestPermissionsAsync()).status
+    if (status !== 'granted') {
+      const res = await Notifications.requestPermissionsAsync({
+        ios: {
+          allowAlert: true,
+          allowBadge: true,
+          allowSound: true,
+        },
+        android: {},
+      })
+      status = res.status
+    }
     if (status !== 'granted') return status === 'denied' ? 'denied' : 'undetermined'
 
-    const projectId = Constants.expoConfig?.extra?.eas?.projectId ?? Constants.easConfig?.projectId
-    if (!projectId) {
-      reportPushError(sessionToken, 'config', new Error('No Expo project ID in this build'))
-      return 'error'
-    }
+    const projectId =
+      Constants.expoConfig?.extra?.eas?.projectId ??
+      Constants.easConfig?.projectId ??
+      'fd2e6705-5501-4056-9959-b278d05ae7b1'
+
     stage = 'expo-token'
     const { data } = await Notifications.getExpoPushTokenAsync({ projectId })
     stage = 'save-token'
-    await api('/push-token', { token: sessionToken, method: 'POST', body: { token: data, platform: Platform.OS } })
+    await api('/push-token', {
+      token: sessionToken,
+      method: 'POST',
+      body: { token: data, platform: Platform.OS },
+    })
     lastPushError = null
     return 'granted'
   } catch (err) {
@@ -67,13 +121,15 @@ export async function registerForPush(sessionToken: string): Promise<PushState> 
   }
 }
 
-/** Current permission without prompting, so the app can offer a friendly opt-in card. */
+/** Current permission without prompting, so the app can offer a friendly opt-in card */
 export function usePushState() {
   const [state, setState] = useState<PushState>(pushSupported ? 'undetermined' : 'unsupported')
   useEffect(() => {
     if (!pushSupported) return
     Notifications.getPermissionsAsync()
-      .then(({ status }) => setState(status === 'granted' ? 'granted' : status === 'denied' ? 'denied' : 'undetermined'))
+      .then(({ status }) =>
+        setState(status === 'granted' ? 'granted' : status === 'denied' ? 'denied' : 'undetermined'),
+      )
       .catch(() => {})
   }, [])
   return [state, setState] as const
@@ -91,10 +147,9 @@ function openFromNotification(data: Record<string, unknown> | undefined) {
 
 const refreshEverything = () => mutate(() => true)
 
-/** Opens the right screen when a parent taps a notification, and refreshes data when one arrives. */
+/** Opens the right screen when a parent taps a notification, and refreshes data when one arrives */
 export function useNotificationRouting() {
   useEffect(() => {
-    // Notification APIs are native-only; calling them in the web preview throws.
     if (!pushSupported) return
 
     const handleTap = (response: Notifications.NotificationResponse) => {

@@ -8,6 +8,7 @@ import { AppLockProvider, useAppLock } from '../lib/app-lock'
 import { SessionProvider, useSession } from '../lib/session'
 import { colors } from '../lib/theme'
 import { getActiveRole, type ActiveRole } from '../lib/user-role'
+import { requestPushPermission } from '../lib/push'
 
 SplashScreen.preventAutoHideAsync().catch(() => {})
 
@@ -18,6 +19,7 @@ function RootNavigator() {
   const [roleReady, setRoleReady] = useState(false)
 
   useEffect(() => {
+    requestPushPermission().catch(() => {})
     getActiveRole().then((role) => {
       setActiveRoleState(role)
       setRoleReady(true)

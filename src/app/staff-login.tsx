@@ -132,7 +132,7 @@ export default function StaffLoginScreen() {
             cacheEnabled={true}
             incognito={false}
             allowsBackForwardNavigationGestures={true}
-            applicationNameForUserAgent="AStarSwimSchools-MobileApp/1.0.6"
+            applicationNameForUserAgent="AStarSwimSchools-MobileApp/1.0.7"
             onNavigationStateChange={onNavigationStateChange}
           />
         ) : null}

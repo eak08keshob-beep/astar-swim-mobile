@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "280982499619",
+    "project_id": "a-star-swim-schools",
+    "storage_bucket": "a-star-swim-schools.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:280982499619:android:f7b8820d96c47ae48bdc96",
+        "android_client_info": {
+          "package_name": "com.astarswimschools.parent"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCN4OzZxe4aTOQ0wcFPjJZPKHZd1ZXcsrQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
