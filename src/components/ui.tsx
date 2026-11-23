@@ -1,4 +1,5 @@
 import Ionicons from '@expo/vector-icons/Ionicons'
+import Constants from 'expo-constants'
 import type { ReactNode } from 'react'
 import {
   ActivityIndicator,
@@ -89,18 +90,23 @@ function openStaffLogin() {
   else Linking.openURL(STAFF_LOGIN_URL)
 }
 
+const APP_VERSION = Constants.expoConfig?.version
+
 export function StaffLoginLink() {
   return (
-    <Pressable
-      accessibilityRole="link"
-      accessibilityHint="Opens the A Star Swim Schools staff sign in"
-      onPress={openStaffLogin}
-      hitSlop={8}
-      style={({ pressed }) => [styles.staffLink, pressed && { opacity: 0.6 }]}
-    >
-      <Ionicons name="lock-closed-outline" size={16} color={colors.muted} />
-      <Text style={styles.staffLinkText}>Staff login</Text>
-    </Pressable>
+    <View style={styles.staffLinkGroup}>
+      <Pressable
+        accessibilityRole="link"
+        accessibilityHint="Opens the A Star Swim Schools staff sign in"
+        onPress={openStaffLogin}
+        hitSlop={8}
+        style={({ pressed }) => [styles.staffLink, pressed && { opacity: 0.6 }]}
+      >
+        <Ionicons name="lock-closed-outline" size={16} color={colors.muted} />
+        <Text style={styles.staffLinkText}>Staff login</Text>
+      </Pressable>
+      {APP_VERSION ? <Text style={styles.versionText}>Version {APP_VERSION}</Text> : null}
+    </View>
   )
 }
 
@@ -193,4 +199,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: space.md,
   },
   staffLinkText: { fontSize: 15, fontWeight: '600', color: colors.muted },
+  staffLinkGroup: { alignItems: 'center', gap: space.xs },
+  versionText: { fontSize: 12, color: colors.muted },
 })

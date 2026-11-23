@@ -1,9 +1,10 @@
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { router } from 'expo-router'
-import { Pressable, StyleSheet, Text, View } from 'react-native'
+import { Pressable, StyleSheet, Switch, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { ErrorText, Loading, Screen, SectionLabel } from '../../components/ui'
 import type { Summary, Swimmer } from '../../lib/api'
+import { useAppLock } from '../../lib/app-lock'
 import { dayName, formatMoney, formatTime } from '../../lib/format'
 import { getLastPushError, registerForPush, usePushState } from '../../lib/push'
 import { useSession } from '../../lib/session'
@@ -69,6 +70,7 @@ export default function Home() {
   const summary = useApi<Summary>('/me')
   const swimmers = useApi<{ swimmers: Swimmer[] }>('/swimmers')
   const [pushState, setPushState] = usePushState()
+  const lock = useAppLock()
 
   if (!summary.data && !summary.error) return <Loading />
   const me = summary.data
@@ -236,6 +238,27 @@ export default function Home() {
                 </View>
               </View>
             ))}
+          </View>
+        </>
+      ) : null}
+
+      {lock.available ? (
+        <>
+          <SectionLabel>Security</SectionLabel>
+          <View style={[styles.group, styles.action]}>
+            <View style={[styles.actionIcon, { backgroundColor: colors.primarySoft }]}>
+              <Ionicons name={lock.label === 'Face ID' ? 'scan' : 'finger-print'} size={20} color={colors.primary} />
+            </View>
+            <View style={{ flex: 1, gap: 2 }}>
+              <Text style={[type.body, { fontWeight: '700' }]}>Unlock with {lock.label}</Text>
+              <Text style={type.small}>Ask for {lock.label} when the app opens.</Text>
+            </View>
+            <Switch
+              value={lock.enabled}
+              onValueChange={lock.setEnabled}
+              trackColor={{ true: colors.primary, false: colors.border }}
+              accessibilityLabel={`Unlock with ${lock.label}`}
+            />
           </View>
         </>
       ) : null}

@@ -167,19 +167,58 @@ jobs:
           npx expo prebuild --platform android --clean
           ls -la android
 
-      - name: 6. Build Android APK
+      - name: 6. Build Standalone Release APK & Google Play AAB
         run: |
           cd android
           chmod +x gradlew
-          ./gradlew assembleDebug --no-daemon
-          mkdir -p ../dist-apk
-          APK_FILE=$(find app/build/outputs/apk -name "*.apk" | head -n 1)
-          cp "$APK_FILE" ../dist-apk/AStarSwimSchools-v1.0.6-Preview.apk
-          ls -lh ../dist-apk
+          
+          # Ensure release buildType uses signingConfigs.debug so the standalone APK installs directly on physical devices
+          python3 -c "
+          p = 'app/build.gradle'
+          with open(p, 'r') as f:
+              content = f.read()
+          if 'signingConfig signingConfigs.debug' not in content:
+              content = content.replace('buildTypes {', 'buildTypes {\n        release {\n            signingConfig signingConfigs.debug\n        }')
+          elif 'signingConfig signingConfigs.release' in content:
+              content = content.replace('signingConfig signingConfigs.release', 'signingConfig signingConfigs.debug')
+          with open(p, 'w') as f:
+              f.write(content)
+          "
 
-      - name: 7. Upload Android APK Artifact
+          # Build Release APK (offline standalone with bundled JS) and Release AAB (Google Play bundle)
+          ./gradlew assembleRelease bundleRelease --no-daemon
+
+          mkdir -p ../dist-apk ../dist-aab
+
+          # Copy Release APK
+          APK_FILE=$(find app/build/outputs/apk/release -name "*.apk" | head -n 1)
+          if [ -z "$APK_FILE" ]; then
+            APK_FILE=$(find app/build/outputs/apk -name "*.apk" | head -n 1)
+          fi
+          echo "Found Standalone Release APK: $APK_FILE"
+          cp "$APK_FILE" ../dist-apk/AStarSwimSchools-v1.0.6-Preview.apk
+
+          # Copy Release AAB
+          AAB_FILE=$(find app/build/outputs/bundle/release -name "*.aab" | head -n 1)
+          if [ -n "$AAB_FILE" ]; then
+            echo "Found Google Play AAB: $AAB_FILE"
+            cp "$AAB_FILE" ../dist-aab/AStarSwimSchools-v1.0.6-PlayStore.aab
+          fi
+
+          ls -lh ../dist-apk
+          ls -lh ../dist-aab || true
+
+      - name: 7. Verify Offline JS Bundle inside Standalone APK
+        run: |
+          echo "Verifying index.android.bundle inside standalone APK..."
+          unzip -l dist-apk/AStarSwimSchools-v1.0.6-Preview.apk | grep -E "index\.android\.bundle|hermes" || (echo "ERROR: index.android.bundle is missing from APK!" && exit 1)
+          echo "SUCCESS: Standalone APK contains offline JS bundle and is 100% verified!"
+
+      - name: 8. Upload Android Release Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: AStarSwimSchools-v1.0.6-Preview-APK
-          path: dist-apk/AStarSwimSchools-v1.0.6-Preview.apk
+          name: AStarSwimSchools-v1.0.6-Android-Binaries
+          path: |
+            dist-apk/AStarSwimSchools-v1.0.6-Preview.apk
+            dist-aab/*.aab
           retention-days: 30

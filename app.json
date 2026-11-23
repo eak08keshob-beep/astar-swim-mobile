@@ -41,6 +41,12 @@
       "expo-secure-store",
       "expo-image",
       [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Use Face ID to unlock your A Star Swim Schools account."
+        }
+      ],
+      [
         "expo-notifications",
         {
           "color": "#1D5BB0"
