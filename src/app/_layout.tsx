@@ -1,14 +1,25 @@
 import { Stack } from 'expo-router'
+import * as SplashScreen from 'expo-splash-screen'
 import { StatusBar } from 'expo-status-bar'
+import { useEffect } from 'react'
 import { LockScreen } from '../components/lock-screen'
 import { Loading } from '../components/ui'
 import { AppLockProvider, useAppLock } from '../lib/app-lock'
 import { SessionProvider, useSession } from '../lib/session'
 import { colors } from '../lib/theme'
 
+SplashScreen.preventAutoHideAsync().catch(() => {})
+
 function RootNavigator() {
   const { token, ready } = useSession()
   const lock = useAppLock()
+
+  useEffect(() => {
+    if (ready && lock.checked) {
+      SplashScreen.hideAsync().catch(() => {})
+    }
+  }, [ready, lock.checked])
+
   if (!ready || !lock.checked) return <Loading />
 
   return (
@@ -34,6 +45,7 @@ function RootNavigator() {
         <Stack.Screen name="sign-in" options={{ title: 'Sign in' }} />
         <Stack.Screen name="forgot-password" options={{ title: 'Reset password' }} />
       </Stack.Protected>
+      <Stack.Screen name="staff-login" options={{ headerShown: false }} />
     </Stack>
     {lock.locked ? <LockScreen /> : null}
     </>

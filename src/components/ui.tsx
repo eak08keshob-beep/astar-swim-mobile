@@ -1,5 +1,6 @@
 import Ionicons from '@expo/vector-icons/Ionicons'
 import Constants from 'expo-constants'
+import { router } from 'expo-router'
 import type { ReactNode } from 'react'
 import {
   ActivityIndicator,
@@ -85,9 +86,11 @@ export function Button({
 const STAFF_LOGIN_URL = `${BASE_URL}/staff-login`
 
 function openStaffLogin() {
-  // The web build is served from the school site, so stay in the same tab instead of opening a new one.
-  if (Platform.OS === 'web') globalThis.location?.assign(STAFF_LOGIN_URL)
-  else Linking.openURL(STAFF_LOGIN_URL)
+  if (Platform.OS === 'web') {
+    globalThis.location?.assign(STAFF_LOGIN_URL)
+  } else {
+    router.push('/staff-login')
+  }
 }
 
 const APP_VERSION = Constants.expoConfig?.version
@@ -96,14 +99,15 @@ export function StaffLoginLink() {
   return (
     <View style={styles.staffLinkGroup}>
       <Pressable
-        accessibilityRole="link"
-        accessibilityHint="Opens the A Star Swim Schools staff sign in"
+        accessibilityRole="button"
+        accessibilityLabel="Staff login"
+        accessibilityHint="Opens the in-app A Star Swim Schools staff portal"
         onPress={openStaffLogin}
         hitSlop={8}
         style={({ pressed }) => [styles.staffLink, pressed && { opacity: 0.6 }]}
       >
-        <Ionicons name="lock-closed-outline" size={16} color={colors.muted} />
-        <Text style={styles.staffLinkText}>Staff login</Text>
+        <Ionicons name="shield-checkmark-outline" size={16} color={colors.primary} />
+        <Text style={[styles.staffLinkText, { color: colors.primary, fontWeight: '600' }]}>Staff Login (In-App Portal)</Text>
       </Pressable>
       {APP_VERSION ? <Text style={styles.versionText}>Version {APP_VERSION}</Text> : null}
     </View>

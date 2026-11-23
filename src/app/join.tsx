@@ -1,10 +1,11 @@
+import { Image } from 'expo-image'
 import { router, useLocalSearchParams } from 'expo-router'
 import { useEffect, useState } from 'react'
-import { Text } from 'react-native'
+import { Text, View } from 'react-native'
 import { Button, Card, ErrorText, Field, Screen, StaffLoginLink } from '../components/ui'
 import { ApiError, api, type AuthResult, type Invite } from '../lib/api'
 import { useSession } from '../lib/session'
-import { type } from '../lib/theme'
+import { space, type } from '../lib/theme'
 
 export default function Join() {
   const params = useLocalSearchParams<{ code?: string }>()
@@ -62,7 +63,17 @@ export default function Join() {
   if (!invite) {
     return (
       <Screen>
-        <Text style={type.body}>Enter the invite code from your A Star Swim Schools welcome email.</Text>
+        <View style={{ alignItems: 'center', marginBottom: space.md, marginTop: space.sm }}>
+          <Image
+            source={require('../../assets/logo.png')}
+            style={{ width: 220, height: 106 }}
+            contentFit="contain"
+            accessibilityLabel="A Star Swim Schools"
+          />
+        </View>
+        <Text style={[type.body, { textAlign: 'center', marginBottom: space.sm }]}>
+          Enter the invite code from your A Star Swim Schools welcome email.
+        </Text>
         <Field
           label="Invite code"
           value={code}

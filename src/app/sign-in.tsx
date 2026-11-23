@@ -1,10 +1,11 @@
+import { Image } from 'expo-image'
 import { router, useLocalSearchParams } from 'expo-router'
 import { useState } from 'react'
-import { Text } from 'react-native'
+import { Text, View } from 'react-native'
 import { Button, ErrorText, Field, Screen, StaffLoginLink } from '../components/ui'
 import { ApiError, api, type AuthResult } from '../lib/api'
 import { useSession } from '../lib/session'
-import { type } from '../lib/theme'
+import { space, type } from '../lib/theme'
 
 export default function SignIn() {
   const params = useLocalSearchParams<{ code?: string; email?: string }>()
@@ -35,7 +36,17 @@ export default function SignIn() {
 
   return (
     <Screen>
-      <Text style={type.body}>Sign in with the email and password you used for A Star Swim Schools.</Text>
+      <View style={{ alignItems: 'center', marginBottom: space.md, marginTop: space.sm }}>
+        <Image
+          source={require('../../assets/logo.png')}
+          style={{ width: 220, height: 106 }}
+          contentFit="contain"
+          accessibilityLabel="A Star Swim Schools"
+        />
+      </View>
+      <Text style={[type.body, { textAlign: 'center', marginBottom: space.sm }]}>
+        Sign in with the email and password you used for A Star Swim Schools.
+      </Text>
       <Field
         label="Email"
         value={email}
