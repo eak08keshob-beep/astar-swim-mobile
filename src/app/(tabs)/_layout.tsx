@@ -2,6 +2,7 @@ import Ionicons from '@expo/vector-icons/Ionicons'
 import { Tabs } from 'expo-router'
 import { useEffect } from 'react'
 import type { ColorValue } from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import type { Summary } from '../../lib/api'
 import { registerForPush, useNotificationRouting } from '../../lib/push'
 import { useSession } from '../../lib/session'
@@ -17,6 +18,7 @@ const icon =
   )
 
 export default function TabsLayout() {
+  const insets = useSafeAreaInsets()
   const { token } = useSession()
   const { data: summary } = useApi<Summary>('/me')
 
@@ -26,12 +28,22 @@ export default function TabsLayout() {
     if (token) registerForPush(token)
   }, [token])
 
+  // Provide ample safe area clearance above phone's 3-button navigation bar or gesture pill
+  const bottomInset = Math.max(insets.bottom, 28)
+  const tabHeight = 54 + bottomInset
+
   return (
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.muted,
-        tabBarStyle: { backgroundColor: colors.card, borderTopColor: colors.border, height: 64, paddingTop: 6 },
+        tabBarStyle: {
+          backgroundColor: colors.card,
+          borderTopColor: colors.border,
+          height: tabHeight,
+          paddingTop: 6,
+          paddingBottom: bottomInset,
+        },
         tabBarLabelStyle: { fontSize: 12, fontWeight: '600' },
         headerStyle: { backgroundColor: colors.background },
         headerTitleStyle: { color: colors.text, fontWeight: '700', fontSize: 18 },
