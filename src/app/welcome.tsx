@@ -5,6 +5,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Button, StaffLoginLink } from '../components/ui'
 import { colors, radius, space, type } from '../lib/theme'
+import { setActiveRole } from '../lib/user-role'
 
 export default function Welcome() {
   return (
@@ -37,7 +38,10 @@ export default function Welcome() {
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Staff Portal Login"
-          onPress={() => router.push('/staff-login')}
+          onPress={async () => {
+            await setActiveRole('staff')
+            router.push('/staff-login')
+          }}
           style={({ pressed }) => [styles.staffCard, pressed && { opacity: 0.8 }]}
         >
           <View style={styles.staffIconContainer}>

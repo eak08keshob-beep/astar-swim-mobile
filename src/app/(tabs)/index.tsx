@@ -10,6 +10,7 @@ import { getLastPushError, registerForPush, usePushState } from '../../lib/push'
 import { useSession } from '../../lib/session'
 import { colors, radius, space, type } from '../../lib/theme'
 import { useApi } from '../../lib/use-api'
+import { setActiveRole } from '../../lib/user-role'
 
 type IconName = keyof typeof Ionicons.glyphMap
 
@@ -262,6 +263,18 @@ export default function Home() {
           </View>
         </>
       ) : null}
+
+      <Pressable
+        accessibilityRole="button"
+        onPress={async () => {
+          await setActiveRole('staff')
+          router.push('/staff-login')
+        }}
+        style={[styles.signOut, { marginTop: space.sm, paddingVertical: space.sm }]}
+      >
+        <Ionicons name="shield-checkmark-outline" size={18} color={colors.primary} />
+        <Text style={[type.small, { fontWeight: '600', color: colors.primary }]}>School Staff Portal</Text>
+      </Pressable>
 
       <Pressable accessibilityRole="button" onPress={signOut} style={styles.signOut}>
         <Ionicons name="log-out-outline" size={18} color={colors.muted} />

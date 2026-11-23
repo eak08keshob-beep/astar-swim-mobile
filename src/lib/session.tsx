@@ -2,6 +2,7 @@ import * as SecureStore from 'expo-secure-store'
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { Platform } from 'react-native'
 import { api } from './api'
+import { setActiveRole } from './user-role'
 
 const TOKEN_KEY = 'astar.session'
 
@@ -37,6 +38,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
   const signIn = useCallback(async (next: string) => {
     await storage.set(next)
+    await setActiveRole('parent')
     setToken(next)
   }, [])
 
@@ -44,6 +46,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     const current = token
     setToken(null)
     await storage.clear()
+    await setActiveRole(null)
     if (current) api('/auth/sign-out', { token: current, method: 'POST', body: {} }).catch(() => {})
   }, [token])
 

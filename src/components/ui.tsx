@@ -18,6 +18,7 @@ import {
 } from 'react-native'
 import { BASE_URL } from '../lib/api'
 import { colors, radius, space, type } from '../lib/theme'
+import { setActiveRole } from '../lib/user-role'
 
 export function Screen({
   children,
@@ -85,7 +86,8 @@ export function Button({
 
 const STAFF_LOGIN_URL = `${BASE_URL}/staff-login`
 
-function openStaffLogin() {
+async function openStaffLogin() {
+  await setActiveRole('staff')
   if (Platform.OS === 'web') {
     globalThis.location?.assign(STAFF_LOGIN_URL)
   } else {
