@@ -67,7 +67,9 @@ jobs:
 
           echo "Installing App Store Distribution Provisioning Profile..."
           mkdir -p "$HOME/Library/MobileDevice/Provisioning Profiles"
-          echo -n "$BUILD_PROVISION_PROFILE_BASE64" | base64 --decode -o "$HOME/Library/MobileDevice/Provisioning Profiles/3eec1108-e221-4fd1-8f11-4bd4cc792bf2.mobileprovision"
+          UUID=$(grep -A1 UUID AStarSwim_AppStore.mobileprovision | tail -n 1 | sed 's/.*<string>//;s/<\/string>.*//')
+          echo "Installing profile with UUID: $UUID"
+          cp AStarSwim_AppStore.mobileprovision "$HOME/Library/MobileDevice/Provisioning Profiles/${UUID}.mobileprovision"
 
           echo "Verifying code signing identity..."
           security find-identity -v -p codesigning

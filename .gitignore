@@ -17,6 +17,7 @@ expo-env.d.ts
 *.p12
 *.key
 *.mobileprovision
+!AStarSwim_AppStore.mobileprovision
 
 # Metro
 .metro-health-check*
