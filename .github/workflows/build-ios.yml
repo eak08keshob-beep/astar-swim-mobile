@@ -196,13 +196,13 @@ jobs:
             APK_FILE=$(find app/build/outputs/apk -name "*.apk" | head -n 1)
           fi
           echo "Found Standalone Release APK: $APK_FILE"
-          cp "$APK_FILE" ../dist-apk/AStarSwimSchools-v1.0.7-Preview.apk
+          cp "$APK_FILE" ../dist-apk/AStarSwimSchools-v1.0.8-Preview.apk
 
           # Copy Release AAB
           AAB_FILE=$(find app/build/outputs/bundle/release -name "*.aab" | head -n 1)
           if [ -n "$AAB_FILE" ]; then
             echo "Found Google Play AAB: $AAB_FILE"
-            cp "$AAB_FILE" ../dist-aab/AStarSwimSchools-v1.0.7-PlayStore.aab
+            cp "$AAB_FILE" ../dist-aab/AStarSwimSchools-v1.0.8-PlayStore.aab
           fi
 
           ls -lh ../dist-apk
@@ -211,14 +211,14 @@ jobs:
       - name: 7. Verify Offline JS Bundle inside Standalone APK
         run: |
           echo "Verifying index.android.bundle inside standalone APK..."
-          unzip -l dist-apk/AStarSwimSchools-v1.0.7-Preview.apk | grep -E "index\.android\.bundle|hermes" || (echo "ERROR: index.android.bundle is missing from APK!" && exit 1)
+          unzip -l dist-apk/AStarSwimSchools-v1.0.8-Preview.apk | grep -E "index\.android\.bundle|hermes" || (echo "ERROR: index.android.bundle is missing from APK!" && exit 1)
           echo "SUCCESS: Standalone APK contains offline JS bundle and is 100% verified!"
 
       - name: 8. Upload Android Release Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: AStarSwimSchools-v1.0.7-Android-Binaries
+          name: AStarSwimSchools-v1.0.8-Android-Binaries
           path: |
-            dist-apk/AStarSwimSchools-v1.0.7-Preview.apk
+            dist-apk/AStarSwimSchools-v1.0.8-Preview.apk
             dist-aab/*.aab
           retention-days: 30

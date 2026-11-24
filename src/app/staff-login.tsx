@@ -5,13 +5,16 @@ import {
   BackHandler,
   Platform,
   Pressable,
-  StatusBar,
+  StatusBar as RNStatusBar,
   StyleSheet,
   Text,
   View,
 } from 'react-native'
+import { StatusBar } from 'expo-status-bar'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { WebView, type WebViewNavigation } from 'react-native-webview'
+
+const WebViewComponent = WebView as any
 import { BASE_URL } from '../lib/api'
 import { useSession } from '../lib/session'
 import { colors, space } from '../lib/theme'
@@ -79,11 +82,11 @@ export default function StaffLoginScreen() {
     }
   }
 
-  const topInset = Math.max(insets.top, StatusBar.currentHeight ?? 0, 24)
+  const topInset = Math.max(insets.top, RNStatusBar.currentHeight ?? 0, 24)
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" translucent={true} />
+      <StatusBar style="dark" />
 
       {/* Safe Area Header with clean padding below device status bar icons */}
       <View style={[styles.headerContainer, { paddingTop: topInset }]}>
@@ -121,7 +124,7 @@ export default function StaffLoginScreen() {
       {/* In-App WebView - Seamless rendering with persistent cookies and session */}
       <View style={styles.webViewContainer}>
         {currentUrl ? (
-          <WebView
+          <WebViewComponent
             ref={webViewRef}
             source={{ uri: currentUrl }}
             style={styles.webView}
@@ -132,7 +135,7 @@ export default function StaffLoginScreen() {
             cacheEnabled={true}
             incognito={false}
             allowsBackForwardNavigationGestures={true}
-            applicationNameForUserAgent="AStarSwimSchools-MobileApp/1.0.7"
+            applicationNameForUserAgent="AStarSwimSchools-MobileApp/1.0.8"
             onNavigationStateChange={onNavigationStateChange}
           />
         ) : null}

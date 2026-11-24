@@ -3,7 +3,7 @@
     "name": "A Star Swim Schools",
     "slug": "a-star-swim-schools",
     "scheme": "astarswim",
-    "version": "1.0.7",
+    "version": "1.0.8",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -16,19 +16,20 @@
       "supportsTablet": false,
       "bundleIdentifier": "com.astarswimschools.parent",
       "appleTeamId": "DH67Z886MU",
-      "buildNumber": "9",
+      "buildNumber": "10",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
       "package": "com.astarswimschools.parent",
-      "versionCode": 9,
+      "versionCode": 10,
       "googleServicesFile": "./google-services.json",
       "permissions": [
         "android.permission.POST_NOTIFICATIONS",
         "android.permission.VIBRATE",
         "android.permission.RECEIVE_BOOT_COMPLETED",
+        "android.permission.WAKE_LOCK",
         "android.permission.USE_BIOMETRIC",
         "android.permission.USE_FINGERPRINT"
       ],

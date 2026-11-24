@@ -9,6 +9,7 @@ import { SessionProvider, useSession } from '../lib/session'
 import { colors } from '../lib/theme'
 import { getActiveRole, type ActiveRole } from '../lib/user-role'
 import { requestPushPermission } from '../lib/push'
+import { registerBackgroundEngine } from '../lib/background-engine'
 
 SplashScreen.preventAutoHideAsync().catch(() => {})
 
@@ -20,6 +21,7 @@ function RootNavigator() {
 
   useEffect(() => {
     requestPushPermission().catch(() => {})
+    registerBackgroundEngine().catch(() => {})
     getActiveRole().then((role) => {
       setActiveRoleState(role)
       setRoleReady(true)

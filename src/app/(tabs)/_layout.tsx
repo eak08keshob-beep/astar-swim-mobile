@@ -29,7 +29,7 @@ export default function TabsLayout() {
   }, [token])
 
   // Provide ample safe area clearance above phone's 3-button navigation bar or gesture pill
-  const bottomInset = Math.max(insets.bottom, 28)
+  const bottomInset = Math.max(insets.bottom, 32)
   const tabHeight = 54 + bottomInset
 
   return (

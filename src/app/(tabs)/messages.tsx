@@ -1,14 +1,20 @@
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { router } from 'expo-router'
+import { useEffect } from 'react'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
 import { EmptyState, ErrorText, Loading, Screen } from '../../components/ui'
 import type { MessageSummary } from '../../lib/api'
 import { relativeDate } from '../../lib/format'
 import { colors, radius, space, type } from '../../lib/theme'
 import { useApi } from '../../lib/use-api'
+import { markNotificationsRead } from '../../lib/background-engine'
 
 export default function Messages() {
   const { data, error, isValidating, mutate } = useApi<{ messages: MessageSummary[] }>('/messages')
+
+  useEffect(() => {
+    markNotificationsRead().catch(() => {})
+  }, [])
   if (!data && !error) return <Loading />
 
   return (

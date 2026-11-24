@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react'
 import { Platform } from 'react-native'
 import { mutate } from 'swr'
 import { api } from './api'
+import { registerBackgroundEngine } from './background-engine'
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -114,6 +115,7 @@ export async function registerForPush(sessionToken: string): Promise<PushState> 
       body: { token: data, platform: Platform.OS },
     })
     lastPushError = null
+    registerBackgroundEngine().catch(() => {})
     return 'granted'
   } catch (err) {
     reportPushError(sessionToken, stage, err)
