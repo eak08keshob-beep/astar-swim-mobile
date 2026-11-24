@@ -16,7 +16,7 @@
       "supportsTablet": false,
       "bundleIdentifier": "com.astarswimschools.parent",
       "appleTeamId": "DH67Z886MU",
-      "buildNumber": "10",
+      "buildNumber": "11",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "UIBackgroundModes": [
@@ -30,7 +30,7 @@
     },
     "android": {
       "package": "com.astarswimschools.parent",
-      "versionCode": 10,
+      "versionCode": 11,
       "googleServicesFile": "./google-services.json",
       "permissions": [
         "android.permission.POST_NOTIFICATIONS",
@@ -80,6 +80,8 @@
         {
           "color": "#1D5BB0",
           "defaultChannel": "default",
+          "mode": "production",
+          "enableBackgroundRemoteNotifications": true,
           "sounds": []
         }
       ]
