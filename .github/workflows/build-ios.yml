@@ -15,7 +15,7 @@ jobs:
   build-and-deploy-ios:
     name: Build, Sign & Deploy to TestFlight
     runs-on: macos-latest
-    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.distribute_testflight == 'true' }}
+    if: ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && contains(github.event.head_commit.message, 'deploy-ios')) }}
 
     steps:
       - name: 1. Check out repository
@@ -68,7 +68,7 @@ jobs:
 
           echo "Installing App Store Distribution Provisioning Profile..."
           mkdir -p "$HOME/Library/MobileDevice/Provisioning Profiles"
-          UUID=$(grep -A1 UUID AStarSwim_AppStore.mobileprovision | tail -n 1 | sed 's/.*<string>//;s/<\/string>.*//')
+          UUID=$(python3 -c "import plistlib, re; f=open('AStarSwim_AppStore.mobileprovision','rb').read(); m=re.search(rb'<\?xml.*?</plist>', f, re.DOTALL); print(plistlib.loads(m.group(0))['UUID'])")
           echo "Installing profile with UUID: $UUID"
           cp AStarSwim_AppStore.mobileprovision "$HOME/Library/MobileDevice/Provisioning Profiles/${UUID}.mobileprovision"
 
@@ -102,8 +102,8 @@ jobs:
           SIGNED_IPA=$(find build/Export -name "*.ipa" | head -n 1)
           if [ -n "$SIGNED_IPA" ]; then
             echo "Production signed IPA created: $SIGNED_IPA"
-            cp "$SIGNED_IPA" ../AStarSwimSchools-Production.ipa
-            ls -lh ../AStarSwimSchools-Production.ipa
+            cp "$SIGNED_IPA" ../AStarSwimSchools-v1.0.8-Production.ipa
+            ls -lh ../AStarSwimSchools-v1.0.8-Production.ipa
           else
             echo "Error: Signed IPA was not produced by xcodebuild."
             exit 1
@@ -113,8 +113,8 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: AStarSwimSchools-Signed-Production-IPA
-          path: AStarSwimSchools-Production.ipa
+          name: AStarSwimSchools-v1.0.8-Signed-Production-IPA
+          path: AStarSwimSchools-v1.0.8-Production.ipa
           retention-days: 30
 
       - name: 11. Deploy Signed App to TestFlight via altool
@@ -132,7 +132,7 @@ jobs:
           echo "Uploading signed IPA to Apple TestFlight..."
           xcrun altool --upload-app \
             --type ios \
-            --file AStarSwimSchools-Production.ipa \
+            --file AStarSwimSchools-v1.0.8-Production.ipa \
             --apiKey "$APP_STORE_CONNECT_KEY_ID" \
             --apiIssuer "$APP_STORE_CONNECT_ISSUER_ID" \
             --show-progress
