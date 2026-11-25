@@ -16,7 +16,7 @@
       "supportsTablet": false,
       "bundleIdentifier": "com.astarswimschools.parent",
       "appleTeamId": "DH67Z886MU",
-      "buildNumber": "12",
+      "buildNumber": "13",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "UIBackgroundModes": [
@@ -30,7 +30,7 @@
     },
     "android": {
       "package": "com.astarswimschools.parent",
-      "versionCode": 12,
+      "versionCode": 13,
       "googleServicesFile": "./google-services.json",
       "permissions": [
         "android.permission.POST_NOTIFICATIONS",

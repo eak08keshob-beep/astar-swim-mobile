@@ -1,3 +1,4 @@
+import * as ImageManipulator from 'expo-image-manipulator'
 import { Platform } from 'react-native'
 
 export const BASE_URL = (process.env.EXPO_PUBLIC_API_URL ?? 'https://www.astarswimmanagement.com').replace(/\/$/, '')
@@ -32,20 +33,50 @@ export async function api<T>(path: string, { token, method = 'GET', body }: Requ
   return data as T
 }
 
+const MAX_PHOTO_DIM = 960
+
 export async function uploadSwimmerPhoto(
   swimmerId: number,
-  photo: { uri: string; mimeType?: string | null; fileName?: string | null },
+  photo: { uri: string; mimeType?: string | null; fileName?: string | null; width?: number; height?: number },
   token: string,
 ): Promise<{ photoVersion: string }> {
-  const type = photo.mimeType ?? 'image/jpeg'
-  const name = photo.fileName ?? `photo.${type.split('/')[1] ?? 'jpg'}`
+  // Shrink and re-encode to JPEG so camera photos stay well below Vercel's 4.5 MB body limit
+  // and avoid HEIC / content:// URI upload issues on iOS and Android.
+  let uploadUri = photo.uri
+  let type = photo.mimeType ?? 'image/jpeg'
+  let name = photo.fileName ?? `photo.${type.split('/')[1] ?? 'jpg'}`
+
+  try {
+    const actions: ImageManipulator.Action[] = []
+    if (photo.width && photo.height) {
+      if (photo.width > MAX_PHOTO_DIM || photo.height > MAX_PHOTO_DIM) {
+        actions.push(
+          photo.width >= photo.height
+            ? { resize: { width: MAX_PHOTO_DIM } }
+            : { resize: { height: MAX_PHOTO_DIM } },
+        )
+      }
+    } else {
+      actions.push({ resize: { width: MAX_PHOTO_DIM } })
+    }
+    const shrunk = await ImageManipulator.manipulateAsync(photo.uri, actions, {
+      compress: 0.78,
+      format: ImageManipulator.SaveFormat.JPEG,
+    })
+    uploadUri = shrunk.uri
+    type = 'image/jpeg'
+    name = 'photo.jpg'
+  } catch {
+    // Fall back to the original asset if image manipulation is unavailable.
+  }
+
   const form = new FormData()
   if (Platform.OS === 'web') {
-    const blob = await (await fetch(photo.uri)).blob()
+    const blob = await (await fetch(uploadUri)).blob()
     form.append('photo', new File([blob], name, { type: blob.type || type }))
   } else {
     // React Native's FormData accepts a { uri, name, type } descriptor for files.
-    form.append('photo', { uri: photo.uri, name, type } as unknown as Blob)
+    form.append('photo', { uri: uploadUri, name, type } as unknown as Blob)
   }
 
   let res: Response
@@ -59,6 +90,9 @@ export async function uploadSwimmerPhoto(
     throw new ApiError('Could not reach A Star Swim Schools. Check your connection and try again.', 0)
   }
   const data = await res.json().catch(() => ({}))
+  if (res.status === 413) {
+    throw new ApiError('That photo is too large. Please choose a smaller photo and try again.', 413)
+  }
   if (!res.ok) throw new ApiError(data?.error ?? 'Could not save the photo. Please try again.', res.status)
   return data as { photoVersion: string }
 }
