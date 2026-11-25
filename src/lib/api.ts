@@ -1,3 +1,4 @@
+import { File as ExpoFile, UploadTask, UploadType } from 'expo-file-system'
 import * as ImageManipulator from 'expo-image-manipulator'
 import { Platform } from 'react-native'
 
@@ -70,30 +71,66 @@ export async function uploadSwimmerPhoto(
     // Fall back to the original asset if image manipulation is unavailable.
   }
 
-  const form = new FormData()
+  const url = `${BASE_URL}/api/app/swimmers/${swimmerId}/photo`
+  let status = 0
+  let rawBody = ''
+
   if (Platform.OS === 'web') {
+    const form = new FormData()
     const blob = await (await fetch(uploadUri)).blob()
     form.append('photo', new File([blob], name, { type: blob.type || type }))
+    let res: Response
+    try {
+      res = await fetch(url, {
+        method: 'POST',
+        headers: { Accept: 'application/json', Authorization: `Bearer ${token}` },
+        body: form,
+      })
+    } catch {
+      throw new ApiError('Could not reach A Star Swim Schools. Check your connection and try again.', 0)
+    }
+    status = res.status
+    rawBody = await res.text().catch(() => '')
   } else {
-    // React Native's FormData accepts a { uri, name, type } descriptor for files.
-    form.append('photo', { uri: uploadUri, name, type } as unknown as Blob)
+    // Use native Expo UploadTask (OkHttp / NSURLSession) instead of RN fetch+FormData,
+    // which drops multipart file uploads on Android/iOS in RN 0.88.
+    const task = new UploadTask(new ExpoFile(uploadUri), url, {
+      httpMethod: 'POST',
+      uploadType: UploadType.MULTIPART,
+      fieldName: 'photo',
+      mimeType: type,
+      headers: { Accept: 'application/json', Authorization: `Bearer ${token}` },
+      sessionType: 'foreground',
+    })
+    try {
+      const result = await task.uploadAsync()
+      status = result.status
+      rawBody = result.body
+    } catch (err) {
+      const detail = err instanceof Error ? err.message : ''
+      throw new ApiError(
+        detail
+          ? `Could not reach A Star Swim Schools (${detail}).`
+          : 'Could not reach A Star Swim Schools. Check your connection and try again.',
+        0,
+      )
+    } finally {
+      try {
+        task.release()
+      } catch {}
+    }
   }
 
-  let res: Response
+  let data: { error?: string; photoVersion?: string } = {}
   try {
-    res = await fetch(`${BASE_URL}/api/app/swimmers/${swimmerId}/photo`, {
-      method: 'POST',
-      headers: { Accept: 'application/json', Authorization: `Bearer ${token}` },
-      body: form,
-    })
-  } catch {
-    throw new ApiError('Could not reach A Star Swim Schools. Check your connection and try again.', 0)
-  }
-  const data = await res.json().catch(() => ({}))
-  if (res.status === 413) {
+    data = rawBody ? JSON.parse(rawBody) : {}
+  } catch {}
+  if (status === 413) {
     throw new ApiError('That photo is too large. Please choose a smaller photo and try again.', 413)
   }
-  if (!res.ok) throw new ApiError(data?.error ?? 'Could not save the photo. Please try again.', res.status)
+  if (status < 200 || status >= 300) {
+    throw new ApiError(data?.error ?? 'Could not save the photo. Please try again.', status)
+  }
   return data as { photoVersion: string }
 }
 

@@ -151,18 +151,18 @@ jobs:
           SIGNED_IPA=$(find build/Export -name "*.ipa" | head -n 1)
           if [ -n "$SIGNED_IPA" ]; then
             echo "Production signed IPA created: $SIGNED_IPA"
-            cp "$SIGNED_IPA" ../AStarSwimSchools-v1.0.9-Production.ipa
-            ls -lh ../AStarSwimSchools-v1.0.9-Production.ipa
+            cp "$SIGNED_IPA" ../AStarSwimSchools-v1.0.10-Production.ipa
+            ls -lh ../AStarSwimSchools-v1.0.10-Production.ipa
           else
             echo "Error: Signed IPA was not produced by xcodebuild."
             exit 1
           fi
 
           echo "Verifying signed IPA embedded mobileprovision entitlements:"
-          unzip -p ../AStarSwimSchools-v1.0.9-Production.ipa 'Payload/*.app/embedded.mobileprovision' | strings | grep -A1 aps-environment || true
+          unzip -p ../AStarSwimSchools-v1.0.10-Production.ipa 'Payload/*.app/embedded.mobileprovision' | strings | grep -A1 aps-environment || true
 
           echo "Verifying Mach-O embedded code signature entitlements in the final IPA:"
-          unzip -q -o ../AStarSwimSchools-v1.0.9-Production.ipa -d $RUNNER_TEMP/ipa_verify
+          unzip -q -o ../AStarSwimSchools-v1.0.10-Production.ipa -d $RUNNER_TEMP/ipa_verify
           codesign -d --entitlements :- $RUNNER_TEMP/ipa_verify/Payload/*.app > $RUNNER_TEMP/entitlements.xml || true
           cat $RUNNER_TEMP/entitlements.xml
           if grep -q "aps-environment" $RUNNER_TEMP/entitlements.xml && grep -q "production" $RUNNER_TEMP/entitlements.xml; then
@@ -175,8 +175,8 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: AStarSwimSchools-v1.0.9-Signed-Production-IPA
-          path: AStarSwimSchools-v1.0.9-Production.ipa
+          name: AStarSwimSchools-v1.0.10-Signed-Production-IPA
+          path: AStarSwimSchools-v1.0.10-Production.ipa
           retention-days: 30
 
       - name: 11. Deploy Signed App to TestFlight via altool
@@ -194,7 +194,7 @@ jobs:
           echo "Uploading signed IPA to Apple TestFlight..."
           xcrun altool --upload-app \
             --type ios \
-            --file AStarSwimSchools-v1.0.9-Production.ipa \
+            --file AStarSwimSchools-v1.0.10-Production.ipa \
             --apiKey "$APP_STORE_CONNECT_KEY_ID" \
             --apiIssuer "$APP_STORE_CONNECT_ISSUER_ID" \
             --show-progress
@@ -258,13 +258,13 @@ jobs:
             APK_FILE=$(find app/build/outputs/apk -name "*.apk" | head -n 1)
           fi
           echo "Found Standalone Release APK: $APK_FILE"
-          cp "$APK_FILE" ../dist-apk/AStarSwimSchools-v1.0.9-Preview.apk
+          cp "$APK_FILE" ../dist-apk/AStarSwimSchools-v1.0.10-Preview.apk
 
           # Copy Release AAB
           AAB_FILE=$(find app/build/outputs/bundle/release -name "*.aab" | head -n 1)
           if [ -n "$AAB_FILE" ]; then
             echo "Found Google Play AAB: $AAB_FILE"
-            cp "$AAB_FILE" ../dist-aab/AStarSwimSchools-v1.0.9-PlayStore.aab
+            cp "$AAB_FILE" ../dist-aab/AStarSwimSchools-v1.0.10-PlayStore.aab
           fi
 
           ls -lh ../dist-apk
@@ -273,14 +273,14 @@ jobs:
       - name: 7. Verify Offline JS Bundle inside Standalone APK
         run: |
           echo "Verifying index.android.bundle inside standalone APK..."
-          unzip -l dist-apk/AStarSwimSchools-v1.0.9-Preview.apk | grep -E "index\.android\.bundle|hermes" || (echo "ERROR: index.android.bundle is missing from APK!" && exit 1)
+          unzip -l dist-apk/AStarSwimSchools-v1.0.10-Preview.apk | grep -E "index\.android\.bundle|hermes" || (echo "ERROR: index.android.bundle is missing from APK!" && exit 1)
           echo "SUCCESS: Standalone APK contains offline JS bundle and is 100% verified!"
 
       - name: 8. Upload Android Release Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: AStarSwimSchools-v1.0.9-Android-Binaries
+          name: AStarSwimSchools-v1.0.10-Android-Binaries
           path: |
-            dist-apk/AStarSwimSchools-v1.0.9-Preview.apk
+            dist-apk/AStarSwimSchools-v1.0.10-Preview.apk
             dist-aab/*.aab
           retention-days: 30
