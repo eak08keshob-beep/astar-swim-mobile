@@ -3,7 +3,7 @@
     "name": "A Star Swim Schools",
     "slug": "a-star-swim-schools",
     "scheme": "astarswim",
-    "version": "1.0.8",
+    "version": "1.0.9",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -16,7 +16,7 @@
       "supportsTablet": false,
       "bundleIdentifier": "com.astarswimschools.parent",
       "appleTeamId": "DH67Z886MU",
-      "buildNumber": "11",
+      "buildNumber": "12",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "UIBackgroundModes": [
@@ -30,7 +30,7 @@
     },
     "android": {
       "package": "com.astarswimschools.parent",
-      "versionCode": 11,
+      "versionCode": 12,
       "googleServicesFile": "./google-services.json",
       "permissions": [
         "android.permission.POST_NOTIFICATIONS",
@@ -73,6 +73,14 @@
         "expo-local-authentication",
         {
           "faceIDPermission": "Use Face ID to unlock your A Star Swim Schools account."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Choose a photo of your swimmer so the school can recognise them.",
+          "cameraPermission": "Take a photo of your swimmer so the school can recognise them.",
+          "microphonePermission": false
         }
       ],
       [

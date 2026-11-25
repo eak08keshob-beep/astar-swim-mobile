@@ -2,7 +2,15 @@ import Ionicons from '@expo/vector-icons/Ionicons'
 import { useState } from 'react'
 import { Linking, Pressable, StyleSheet, Text, View } from 'react-native'
 import { Card, EmptyState, ErrorText, Loading, Pill, Screen, SectionLabel } from '../../components/ui'
-import { type AccidentRecord, BASE_URL, type Records, type SignedDocument } from '../../lib/api'
+import { router } from 'expo-router'
+import {
+  type AccidentRecord,
+  BASE_URL,
+  type Forms,
+  outstandingForms,
+  type Records,
+  type SignedDocument,
+} from '../../lib/api'
 import { shortDate } from '../../lib/format'
 import { colors, space, type } from '../../lib/theme'
 import { useApi } from '../../lib/use-api'
@@ -80,11 +88,47 @@ function DocumentRow({ doc, last }: { doc: SignedDocument; last: boolean }) {
 
 export default function RecordsScreen() {
   const { data, error, isValidating, mutate } = useApi<Records>('/records')
+  const forms = useApi<Forms>('/forms')
   if (!data && !error) return <Loading />
+  const todo = outstandingForms(forms.data)
 
   return (
-    <Screen refreshing={isValidating} onRefresh={() => mutate()}>
-      <ErrorText message={error?.message} />
+    <Screen
+      refreshing={isValidating || forms.isValidating}
+      onRefresh={() => {
+        mutate()
+        forms.mutate()
+      }}
+    >
+      <ErrorText message={error?.message ?? forms.error?.message} />
+
+      {todo.length ? (
+        <>
+          <SectionLabel>Forms to complete</SectionLabel>
+          <Card>
+            {todo.map(({ swimmer, form }, i) => (
+              <Pressable
+                key={`${swimmer.id}-${form.kind}`}
+                accessibilityRole="button"
+                accessibilityLabel={`Complete ${form.title} for ${swimmer.firstName}`}
+                onPress={() => router.push(`/form/${swimmer.id}/${form.kind}`)}
+                style={({ pressed }) => [
+                  styles.docRow,
+                  i > 0 && styles.divider,
+                  pressed && { opacity: 0.7 },
+                ]}
+              >
+                <Ionicons name="create-outline" size={22} color={colors.primary} />
+                <View style={{ flex: 1, gap: 2 }}>
+                  <Text style={[type.body, { fontWeight: '700' }]}>{form.title}</Text>
+                  <Text style={type.small}>For {swimmer.firstName}. Tap to fill in and sign.</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={20} color={colors.muted} />
+              </Pressable>
+            ))}
+          </Card>
+        </>
+      ) : null}
 
       <SectionLabel>Signed documents</SectionLabel>
       {data?.documents.length === 0 ? (

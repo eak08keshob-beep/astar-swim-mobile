@@ -2,8 +2,9 @@ import Ionicons from '@expo/vector-icons/Ionicons'
 import { router } from 'expo-router'
 import { Pressable, StyleSheet, Switch, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { SwimmerPhoto } from '../../components/swimmer-photo'
 import { ErrorText, Loading, Screen, SectionLabel } from '../../components/ui'
-import type { Summary, Swimmer } from '../../lib/api'
+import { type Forms, outstandingForms, type Summary, type Swimmer } from '../../lib/api'
 import { useAppLock } from '../../lib/app-lock'
 import { dayName, formatMoney, formatTime } from '../../lib/format'
 import { getLastPushError, registerForPush, usePushState } from '../../lib/push'
@@ -70,6 +71,8 @@ export default function Home() {
   const { token, signOut } = useSession()
   const summary = useApi<Summary>('/me')
   const swimmers = useApi<{ swimmers: Swimmer[] }>('/swimmers')
+  const forms = useApi<Forms>('/forms')
+  const todo = outstandingForms(forms.data)
   const [pushState, setPushState] = usePushState()
   const lock = useAppLock()
 
@@ -79,7 +82,7 @@ export default function Home() {
   const lessons = upcomingLessons(kids)
   const next = lessons[0]
   const later = lessons.slice(1, 4)
-  const firstName = me?.guardianName.split(' ')[0]
+  const firstName = (me?.accountName || me?.guardianName)?.trim().split(/\s+/)[0]
 
   const attention: React.ComponentProps<typeof ActionRow>[] = []
   if (me?.unreadCount) {
@@ -90,6 +93,16 @@ export default function Home() {
       title: me.unreadCount === 1 ? '1 new message' : `${me.unreadCount} new messages`,
       detail: 'From the swim school',
       onPress: () => router.navigate('/messages'),
+    })
+  }
+  if (todo.length) {
+    attention.push({
+      icon: 'create',
+      tint: colors.primary,
+      soft: colors.primarySoft,
+      title: todo.length === 1 ? '1 form to complete' : `${todo.length} forms to complete`,
+      detail: 'Fill in and sign them here in the app',
+      onPress: () => router.navigate('/records'),
     })
   }
   if (me?.unpaidCents) {
@@ -109,6 +122,7 @@ export default function Home() {
       onRefresh={() => {
         summary.mutate()
         swimmers.mutate()
+        forms.mutate()
       }}
     >
       <View style={[styles.header, { paddingTop: insets.top + space.sm }]}>
@@ -200,7 +214,7 @@ export default function Home() {
                   style={({ pressed }) => [styles.kid, pressed && { opacity: 0.85 }]}
                 >
                   <View style={styles.avatar}>
-                    <Text style={styles.avatarText}>{s.firstName[0]}</Text>
+                    <SwimmerPhoto swimmer={s} size={44} background={colors.aquaSoft} color={colors.aqua} />
                   </View>
                   <Text style={[type.body, { fontWeight: '700' }]} numberOfLines={1}>
                     {s.firstName}

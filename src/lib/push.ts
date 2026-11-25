@@ -1,4 +1,5 @@
 import Constants from 'expo-constants'
+import * as Device from 'expo-device'
 import * as Notifications from 'expo-notifications'
 import { router } from 'expo-router'
 import { useEffect, useState } from 'react'
@@ -34,7 +35,7 @@ function reportPushError(sessionToken: string, stage: string, err: unknown) {
       stage,
       message: message.slice(0, 500),
       platform: Platform.OS,
-      isDevice: true,
+      isDevice: Device.isDevice,
       appOwnership: Constants.appOwnership ?? null,
     },
   }).catch(() => {})

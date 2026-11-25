@@ -1,4 +1,5 @@
 import Ionicons from '@expo/vector-icons/Ionicons'
+import * as Application from 'expo-application'
 import Constants from 'expo-constants'
 import { router } from 'expo-router'
 import type { ReactNode } from 'react'
@@ -95,7 +96,20 @@ async function openStaffLogin() {
   }
 }
 
-const APP_VERSION = Constants.expoConfig?.version
+const APP_VERSION = Application.nativeApplicationVersion
+  ? Application.nativeBuildVersion
+    ? `${Application.nativeApplicationVersion} (${Application.nativeBuildVersion})`
+    : Application.nativeApplicationVersion
+  : Constants.expoConfig?.version
+
+export function AppVersion() {
+  if (!APP_VERSION) return null
+  return (
+    <View style={styles.staffLinkGroup}>
+      <Text style={styles.versionText}>Version {APP_VERSION}</Text>
+    </View>
+  )
+}
 
 export function StaffLoginLink() {
   return (

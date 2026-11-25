@@ -95,8 +95,20 @@ export default function Join() {
     <Screen>
       <Card>
         <Text style={type.heading}>Welcome to {invite.schoolName}</Text>
+        <Text style={type.body}>This code is for the {invite.guardianName} family.</Text>
         <Text style={type.small}>Create your parent account to see your family&apos;s swimmers, payments and messages.</Text>
       </Card>
+      <Button
+        label="Not your family? Use a different code"
+        variant="secondary"
+        onPress={() => {
+          setInvite(null)
+          setCode('')
+          setName('')
+          setEmail('')
+          setError(null)
+        }}
+      />
       <Field label="Your name" value={name} onChangeText={setName} autoComplete="name" textContentType="name" />
       <Field
         label="Email"

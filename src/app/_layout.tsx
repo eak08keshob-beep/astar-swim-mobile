@@ -55,6 +55,7 @@ function RootNavigator() {
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="message/[id]" options={{ title: 'Message' }} />
           <Stack.Screen name="schedule/[id]" options={{ title: 'Payment schedule' }} />
+          <Stack.Screen name="form/[swimmerId]/[kind]" options={{ title: 'Form' }} />
         </Stack.Protected>
         <Stack.Protected guard={!token}>
           <Stack.Screen name="welcome" options={{ headerShown: false }} />

@@ -1,3 +1,5 @@
+import { Platform } from 'react-native'
+
 export const BASE_URL = (process.env.EXPO_PUBLIC_API_URL ?? 'https://www.astarswimmanagement.com').replace(/\/$/, '')
 
 export class ApiError extends Error {
@@ -30,12 +32,44 @@ export async function api<T>(path: string, { token, method = 'GET', body }: Requ
   return data as T
 }
 
+export async function uploadSwimmerPhoto(
+  swimmerId: number,
+  photo: { uri: string; mimeType?: string | null; fileName?: string | null },
+  token: string,
+): Promise<{ photoVersion: string }> {
+  const type = photo.mimeType ?? 'image/jpeg'
+  const name = photo.fileName ?? `photo.${type.split('/')[1] ?? 'jpg'}`
+  const form = new FormData()
+  if (Platform.OS === 'web') {
+    const blob = await (await fetch(photo.uri)).blob()
+    form.append('photo', new File([blob], name, { type: blob.type || type }))
+  } else {
+    // React Native's FormData accepts a { uri, name, type } descriptor for files.
+    form.append('photo', { uri: photo.uri, name, type } as unknown as Blob)
+  }
+
+  let res: Response
+  try {
+    res = await fetch(`${BASE_URL}/api/app/swimmers/${swimmerId}/photo`, {
+      method: 'POST',
+      headers: { Accept: 'application/json', Authorization: `Bearer ${token}` },
+      body: form,
+    })
+  } catch {
+    throw new ApiError('Could not reach A Star Swim Schools. Check your connection and try again.', 0)
+  }
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) throw new ApiError(data?.error ?? 'Could not save the photo. Please try again.', res.status)
+  return data as { photoVersion: string }
+}
+
 export type AuthResult = { token: string; user: { id: string; name: string; email: string } }
 
 export type Invite = { code: string; schoolName: string; guardianName: string; email: string | null }
 
 export type Summary = {
   schoolName: string
+  accountName?: string
   guardianName: string
   email: string | null
   phone: string | null
@@ -61,6 +95,7 @@ export type Swimmer = {
   dateOfBirth: string | null
   levelName: string | null
   levelColor: string | null
+  photoVersion: string | null
   lessons: Lesson[]
   badges: { id: number; name: string; color: string | null; awardedOn: string }[]
 }
@@ -114,6 +149,40 @@ export type SignedDocument = {
 }
 
 export type Records = { accidents: AccidentRecord[]; documents: SignedDocument[] }
+
+export type FormField = {
+  id: string
+  label: string
+  type: 'text' | 'date' | 'textarea' | 'yesno' | 'agree'
+  required?: boolean
+}
+
+export type FormDefinition = {
+  kind: string
+  title: string
+  summary: string
+  sections: { title: string; fields: FormField[] }[]
+}
+
+export type FormStatus = { answers: Record<string, string>; signatureName: string; signedAt: string }
+
+export type FormSwimmer = {
+  id: number
+  firstName: string
+  lastName: string
+  dateOfBirth: string | null
+  documents: Record<string, FormStatus>
+}
+
+export type Forms = { forms: FormDefinition[]; swimmers: FormSwimmer[] }
+
+/** Forms each swimmer still needs, in the order the school lists them. */
+export function outstandingForms(data: Forms | undefined) {
+  if (!data) return []
+  return data.swimmers.flatMap((s) =>
+    data.forms.filter((f) => !s.documents[f.kind]).map((f) => ({ swimmer: s, form: f })),
+  )
+}
 
 export type ScheduleLesson = { date: string; badges?: boolean; closed?: boolean; note?: string }
 
