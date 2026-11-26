@@ -41,15 +41,19 @@ function reportPushError(sessionToken: string, stage: string, err: unknown) {
   }).catch(() => {})
 }
 
-/** Configures high-priority notification channel for Android */
+export const NOTIFICATION_CHANNEL_ID = 'whistle'
+export const NOTIFICATION_SOUND = 'notification_whistle.wav'
+
+/** Configures high-priority notification channel for Android with custom whistle sound */
 export async function ensureNotificationChannel(): Promise<void> {
   if (Platform.OS === 'android') {
-    await Notifications.setNotificationChannelAsync('default', {
+    await Notifications.deleteNotificationChannelAsync('default').catch(() => {})
+    await Notifications.setNotificationChannelAsync(NOTIFICATION_CHANNEL_ID, {
       name: 'Messages and reminders',
       importance: Notifications.AndroidImportance.MAX,
       vibrationPattern: [0, 250, 150, 250],
       lightColor: '#1D5BB0',
-      sound: 'default',
+      sound: NOTIFICATION_SOUND,
       enableVibrate: true,
       showBadge: true,
       enableLights: true,

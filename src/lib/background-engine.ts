@@ -4,7 +4,7 @@ import * as SecureStore from 'expo-secure-store'
 import * as TaskManager from 'expo-task-manager'
 import { Platform } from 'react-native'
 import { BASE_URL } from './api'
-import { ensureNotificationChannel } from './push'
+import { ensureNotificationChannel, NOTIFICATION_SOUND } from './push'
 
 export const BACKGROUND_NOTIFICATION_TASK = 'ASTAR_BACKGROUND_NOTIFICATION_TASK'
 export const BACKGROUND_FETCH_TASK = 'ASTAR_BACKGROUND_SYNC_TASK'
@@ -100,10 +100,10 @@ try {
             title: notificationTitle,
             body: notificationBody,
             data: targetData,
-            sound: 'default',
+            sound: NOTIFICATION_SOUND,
             badge: unreadCount,
           },
-          trigger: null, // Instant presentation in Android system tray
+          trigger: null, // Instant presentation using defaultChannel ('whistle')
         })
 
         await SecureStore.setItemAsync(LAST_NOTIFIED_KEY, String(unreadCount))
